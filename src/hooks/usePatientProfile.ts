@@ -129,16 +129,23 @@ export function usePatientProfile() {
 
   const signUp = useCallback(async (emailAddr: string, pwd: string): Promise<boolean> => {
     setAuthError(null);
+
+    // Server-side signup skips confirmation email entirely (no rate limit)
+    const res = await fetch("/api/auth/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: emailAddr, password: pwd }),
+    });
+    const json = (await res.json()) as { error?: string };
+    if (!res.ok) { setAuthError(json.error ?? "Sign-up failed"); return false; }
+
+    // Sign in immediately — user is already confirmed
     const supabase = getSupabaseBrowserClient();
-    const { data, error } = await supabase.auth.signUp({ email: emailAddr, password: pwd });
+    const { data, error } = await supabase.auth.signInWithPassword({ email: emailAddr, password: pwd });
     if (error) { setAuthError(error.message); return false; }
     if (!data.user) return false;
 
-    setUserId(data.user.id);
-    setUserEmail(data.user.email ?? null);
-    setIsAuthenticated(true);
-
-    // Migrate current form / localStorage profile to DB
+    // Migrate localStorage profile to DB
     const local = loadFromStorage();
     await upsertDbProfile(data.user.id, local);
     return true;
