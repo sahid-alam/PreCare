@@ -15,25 +15,28 @@ interface Props {
 
 const tierConfig = {
   home: {
-    label: "HOME CARE",
-    badge: "bg-green-100 text-green-800 border-green-300",
-    border: "border-l-green-500",
+    label: "Home Care",
+    badge: "border-[#d7e8dc] bg-[#edf4ee] text-[#1e6a47]",
+    border: "border-[#d7e8dc]",
+    accent: "#2f8b5e",
     printBg: "#dcfce7",
     printColor: "#166534",
     printBorder: "#86efac",
   },
   clinic: {
-    label: "CLINIC VISIT",
-    badge: "bg-amber-100 text-amber-800 border-amber-300",
-    border: "border-l-amber-500",
+    label: "Clinic Visit",
+    badge: "border-[#e9c58a] bg-[#faefd5] text-[#8a5a12]",
+    border: "border-[#e9c58a]",
+    accent: "#d4a03c",
     printBg: "#fef3c7",
     printColor: "#92400e",
     printBorder: "#fcd34d",
   },
   er: {
-    label: "EMERGENCY ROOM",
-    badge: "bg-red-100 text-red-800 border-red-300",
-    border: "border-l-red-500",
+    label: "Emergency Room",
+    badge: "border-[#e59a92] bg-[#fbe5e1] text-[#9f2d24]",
+    border: "border-[#e59a92]",
+    accent: "#c8473b",
     printBg: "#fee2e2",
     printColor: "#991b1b",
     printBorder: "#fca5a5",
@@ -128,18 +131,20 @@ export default function ClassificationCard({ classification, sessionId }: Props)
   }
 
   return (
-    <Card className={cn("border-l-4", cfg.border)}>
-      <CardHeader className="pb-3">
+    <Card className={cn("overflow-hidden rounded-[16px] bg-white", cfg.border)}>
+      <CardHeader className="border-b border-[#e8e5dc] bg-[#faf8f1] pb-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap items-center gap-2">
             <Badge
               variant="outline"
-              className={cn("text-sm px-3 py-1 font-bold", cfg.badge)}
+              className={cn("rounded-full px-3 py-1 text-[10.5px] font-medium uppercase", cfg.badge)}
+              style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}
             >
+              <span className="mr-2 inline-block h-1.5 w-1.5 rounded-full" style={{ backgroundColor: cfg.accent }} />
               {cfg.label}
             </Badge>
             {classification.red_flag_triggered && (
-              <Badge variant="destructive" className="text-xs">
+              <Badge variant="destructive" className="rounded-full text-xs">
                 Red Flag Override
               </Badge>
             )}
@@ -147,51 +152,51 @@ export default function ClassificationCard({ classification, sessionId }: Props)
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5 text-xs"
+            className="h-8 gap-1.5 rounded-full border-[#dad6cb] bg-white text-xs text-[#3c4a43] hover:bg-[#faf8f1]"
             onClick={handleDownload}
           >
             <Download className="w-3.5 h-3.5" />
-            Download Report
+            Report
           </Button>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {classification.tier === "er" && (
-          <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-lg p-3">
-            <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-            <p className="text-sm font-semibold text-red-700">
-              CALL 112 IMMEDIATELY — This is a medical emergency
+          <div className="flex items-start gap-3 rounded-lg border border-[#e59a92] bg-[#fbe5e1] p-3">
+            <AlertTriangle className="w-5 h-5 text-[#c8473b] shrink-0 mt-0.5" />
+            <p className="text-sm font-semibold text-[#9f2d24]">
+              CALL 108 IMMEDIATELY — This is a medical emergency
             </p>
           </div>
         )}
 
         {classification.chief_complaint && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            <p className="mb-1 text-[10px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>
               Chief Complaint
             </p>
-            <p className="text-sm">{classification.chief_complaint}</p>
+            <p className="text-sm text-[#14241c]">{classification.chief_complaint}</p>
           </div>
         )}
 
         {classification.reasoning && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            <p className="mb-1 text-[10px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>
               Assessment
             </p>
-            <p className="text-sm">{classification.reasoning}</p>
+            <p className="text-sm leading-6 text-[#3c4a43]">{classification.reasoning}</p>
           </div>
         )}
 
         {classification.recommended_actions.length > 0 && (
           <div>
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            <p className="mb-2 text-[10px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.12em" }}>
               Recommended Actions
             </p>
             <ul className="space-y-1">
               {classification.recommended_actions.map((action, i) => (
-                <li key={i} className="text-sm flex items-start gap-2">
-                  <span className="text-muted-foreground shrink-0">•</span>
+                <li key={i} className="flex items-start gap-2 text-sm text-[#3c4a43]">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: cfg.accent }} />
                   {action}
                 </li>
               ))}
@@ -200,12 +205,12 @@ export default function ClassificationCard({ classification, sessionId }: Props)
         )}
 
         {sessionId && (
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-[#6f7a73]">
             Session: {sessionId.slice(0, 8)}
           </p>
         )}
 
-        <p className="text-xs text-muted-foreground border-t pt-3 leading-relaxed">
+        <p className="border-t border-[#e8e5dc] pt-3 text-xs leading-5 text-[#6f7a73]">
           {DISCLAIMER_TEXT}
         </p>
       </CardContent>

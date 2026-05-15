@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sign in · PreCare Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+body.admin-login {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+}
+@media (max-width: 880px) {
+  body.admin-login { grid-template-columns: 1fr; min-height: 100vh; }
+  body.admin-login .panel-left { min-height: 240px; padding: 32px 28px; }
+}
+
+/* Left panel — brand + ambient stats */
+.panel-left {
+  background: var(--bg-ink);
+  color: #BFC8C2;
+  padding: 40px 48px;
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.panel-left::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 80% at 90% 100%, rgba(47,139,94,0.3) 0%, rgba(47,139,94,0) 65%),
+    radial-gradient(40% 60% at 10% 10%, rgba(155,201,172,0.1) 0%, rgba(155,201,172,0) 60%);
+  pointer-events: none;
+}
+.panel-left::after {
+  content: ""; position: absolute; right: -20%; top: -10%;
+  width: 60%; height: 80%;
+  border: 1px solid rgba(255,255,255,0.04);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.panel-left > * { position: relative; z-index: 1; }
+
+.panel-left .brand { color: white; font-size: 18px; }
+.panel-left .brand .mk { width: 30px; height: 30px; }
+.panel-left .brand small { color: #6F8079; }
+
+.panel-left .quote {
+  font-family: var(--font-display);
+  font-size: 30px;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+  color: white;
+  max-width: 22ch;
+  text-wrap: balance;
+}
+.panel-left .quote em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--green-300);
+  font-weight: 400;
+}
+.panel-left .quote-author {
+  margin-top: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #6F8079;
+  text-transform: uppercase;
+}
+
+.live-strip {
+  border-top: 1px solid rgba(255,255,255,0.08);
+  padding-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 18px;
+}
+.live-strip .lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6F8079;
+  margin-bottom: 4px;
+}
+.live-strip .val {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 24px;
+  letter-spacing: -0.02em;
+  color: white;
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 6px;
+}
+.live-strip .val .unit { font-size: 11px; color: #6F8079; font-family: var(--font-mono); }
+.live-strip .delta {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  margin-top: 2px;
+  color: var(--green-300);
+  letter-spacing: 0.04em;
+}
+.live-strip .delta.down { color: var(--red-300); }
+
+.live-strip-head {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #6F8079;
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 16px;
+}
+.live-strip-head .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green-500); box-shadow: 0 0 0 3px rgba(47,139,94,0.2); animation: pulseDot 1.6s infinite; }
+
+/* Right panel — form */
+.panel-right {
+  background: white;
+  padding: 48px 56px;
+  display: flex; flex-direction: column;
+  justify-content: center;
+}
+@media (max-width: 600px) { .panel-right { padding: 32px 24px; } }
+
+.panel-right .eyebrow { margin-bottom: 18px; }
+.panel-right h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 36px;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.panel-right h1 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--green-700);
+}
+.panel-right .lede {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  margin: 0 0 32px;
+  max-width: 42ch;
+  line-height: 1.55;
+}
+
+.field { display: grid; gap: 6px; margin-bottom: 16px; }
+.field label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.field input {
+  padding: 13px 14px;
+  border: 1px solid var(--hair-2);
+  border-radius: 10px;
+  font-size: 14.5px;
+  background: white;
+  transition: border-color .15s, box-shadow .15s;
+}
+.field input:focus {
+  outline: none;
+  border-color: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(47,139,94,0.15);
+}
+.field .row-meta {
+  display: flex; justify-content: space-between;
+  font-size: 12px;
+  color: var(--ink-3);
+  margin-top: 2px;
+}
+.field .row-meta a:hover { color: var(--green-700); text-decoration: underline; }
+
+.btn-signin {
+  background: var(--green-700);
+  color: white;
+  padding: 14px;
+  border-radius: 10px;
+  font-size: 14.5px;
+  font-weight: 500;
+  width: 100%;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 8px;
+  transition: background .15s;
+}
+.btn-signin:hover { background: var(--green-900); }
+
+.panel-right .foot-note {
+  margin-top: 28px;
+  padding-top: 22px;
+  border-top: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-4);
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 8px;
+  flex-wrap: wrap;
+}
+.panel-right .foot-note .pip { width: 4px; height: 4px; border-radius: 50%; background: var(--ink-4); }
+.panel-right .foot-note .green-text { color: var(--green-700); }
+
+.field .input-wrap {
+  position: relative;
+}
+.field .input-wrap .toggle {
+  position: absolute;
+  right: 12px; top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-3);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.field .input-wrap .toggle:hover { color: var(--ink); }
+
+.alert {
+  padding: 12px 14px;
+  background: var(--red-50);
+  border: 1px solid rgba(200,71,59,0.2);
+  border-radius: 10px;
+  color: var(--red-700);
+  font-size: 13px;
+  margin-bottom: 16px;
+  display: none;
+  align-items: start;
+  gap: 10px;
+}
+.alert.show { display: flex; }
+.alert svg { flex-shrink: 0; margin-top: 1px; }
+</style>
+</head>
+<body class="admin-login">
+
+  <!-- Left brand panel -->
+  <div class="panel-left">
+    <div>
+      <a href="index.html" class="brand">
+        <div class="mk">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M7 1.5V12.5M1.5 7H12.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div>
+          PreCare<small>Admin Console</small>
+        </div>
+      </a>
+    </div>
+
+    <div class="quote">
+      “We see them before the <em>waiting room does.</em>”
+      <div class="quote-author">— Dr. S. Iyer, Triage Lead</div>
+    </div>
+
+    <div>
+      <div class="live-strip-head">
+        <span class="dot"></span>
+        Live · St. Mary’s Hospital
+      </div>
+      <div class="live-strip">
+        <div>
+          <div class="lab">Sessions today</div>
+          <div class="val" id="ls-sessions">1,248</div>
+          <div class="delta">↑ 12% vs avg</div>
+        </div>
+        <div>
+          <div class="lab">Red-flags</div>
+          <div class="val" style="color: var(--red-300);">37</div>
+          <div class="delta down">↑ 4 last hour</div>
+        </div>
+        <div>
+          <div class="lab">Avg duration</div>
+          <div class="val">4:12</div>
+          <div class="delta">↓ 22s</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right form -->
+  <div class="panel-right">
+    <div class="eyebrow">Staff sign in</div>
+    <h1>Welcome back to the <em>console.</em></h1>
+    <p class="lede">
+      Use your hospital-issued credentials. Every session is audit-logged and tied to your user.
+    </p>
+
+    <div class="alert" id="alert">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="7" cy="7" r="6"/><path d="M7 4v3M7 10h.01"/></svg>
+      <span id="alert-text">Invalid credentials. Please try again.</span>
+    </div>
+
+    <form id="signin-form" autocomplete="on">
+      <div class="field">
+        <label>Work email</label>
+        <input type="email" name="email" placeholder="you@hospital.org" autocomplete="email" required value="s.iyer@stmary-hospital.org"/>
+      </div>
+
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <input type="password" name="password" placeholder="••••••••••••" autocomplete="current-password" required minlength="8" id="pw"/>
+          <button type="button" class="toggle" id="pw-toggle">Show</button>
+        </div>
+        <div class="row-meta">
+          <span>8+ characters · case-sensitive</span>
+          <a href="#">Forgot password?</a>
+        </div>
+      </div>
+
+      <button class="btn-signin" type="submit">
+        <span id="signin-label">Sign in</span>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </form>
+
+    <div class="foot-note">
+      <span>Need an account?</span>
+      <span class="pip"></span>
+      <span>Contact your <span class="green-text">site administrator</span>.</span>
+      <span style="margin-left: auto;">v1.4 — May 2026</span>
+    </div>
+  </div>
+
+<script>
+  document.getElementById('pw-toggle').addEventListener('click', (e) => {
+    const pw = document.getElementById('pw');
+    const isPw = pw.type === 'password';
+    pw.type = isPw ? 'text' : 'password';
+    e.currentTarget.textContent = isPw ? 'Hide' : 'Show';
+  });
+
+  document.getElementById('signin-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const lab = document.getElementById('signin-label');
+    lab.innerHTML = '<span class="spinner" style="display:inline-block; vertical-align: middle; border-color: rgba(255,255,255,0.3); border-top-color: white;"></span>&nbsp;&nbsp;Signing in…';
+    setTimeout(() => {
+      window.location.href = 'admin.html';
+    }, 600);
+  });
+</script>
+</body>
+</html>

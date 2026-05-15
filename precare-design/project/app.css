@@ -1,0 +1,295 @@
+/* ============================================================
+   PreCare · shared stylesheet
+   Used by /triage, /admin/login, /admin, /admin/session
+   ============================================================ */
+
+:root {
+  /* Surfaces */
+  --bg-app:        #F4F1E9;          /* app background — warm stone */
+  --bg-surface:    #FFFFFF;          /* primary card surface */
+  --bg-surface-2:  #FAF8F1;          /* recessed surface / row bg */
+  --bg-ink:        #14241C;          /* dark surface (call dock, left panel) */
+
+  /* Ink */
+  --ink:    #14241C;
+  --ink-2:  #3C4A43;
+  --ink-3:  #6F7A73;
+  --ink-4:  #97A199;
+
+  /* Hairlines */
+  --hair:   #E8E5DC;
+  --hair-2: #DAD6CB;
+
+  /* Green */
+  --green-900: #0F3A26;
+  --green-700: #1E6A47;
+  --green-500: #2F8B5E;
+  --green-300: #9BC9AC;
+  --green-150: #D7E8DC;
+  --green-50:  #EDF4EE;
+
+  /* Amber */
+  --amber-700: #8A5A12;
+  --amber-500: #D4A03C;
+  --amber-300: #E9C58A;
+  --amber-50:  #FAEFD5;
+
+  /* Red */
+  --red-700: #9F2D24;
+  --red-500: #C8473B;
+  --red-300: #E59A92;
+  --red-50:  #FBE5E1;
+
+  /* Type */
+  --font-sans:    "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque", "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-serif:   "Instrument Serif", "Times New Roman", serif;
+  --font-mono:    "Geist Mono", ui-monospace, monospace;
+}
+
+/* ---------- Reset / base ---------- */
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font-sans);
+  color: var(--ink);
+  background: var(--bg-app);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01", "cv11";
+  line-height: 1.5;
+}
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button {
+  font: inherit; color: inherit; background: none; border: 0;
+  cursor: pointer; padding: 0;
+}
+
+/* ---------- Instrument strip (top status bar) ---------- */
+.instr-strip {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  padding: 8px 24px;
+  background: #0E1A14;
+  color: #6F8079;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.instr-strip .live {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--green-300);
+}
+.instr-strip .live::before {
+  content: "";
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(47,139,94,0.22);
+  animation: pulseDot 1.6s infinite ease-in-out;
+}
+.instr-strip .right {
+  margin-left: auto;
+}
+.instr-strip a {
+  color: #BFC8C2;
+  transition: color .15s;
+}
+.instr-strip a:hover { color: white; }
+
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.15); opacity: 0.85; }
+}
+
+/* ---------- Brand mark ---------- */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+.brand .mk {
+  width: 26px; height: 26px;
+  border-radius: 7px;
+  background:
+    radial-gradient(circle at 30% 30%, #4FA978 0%, #1E6A47 70%);
+  display: grid; place-items: center;
+  color: white;
+  flex-shrink: 0;
+}
+.brand small {
+  display: block;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+  margin-top: -2px;
+}
+
+/* ---------- Eyebrow ---------- */
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--green-700);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: "";
+  width: 16px; height: 1px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 11px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  transition: transform .12s ease, background .15s, box-shadow .15s, color .15s, border-color .15s;
+  white-space: nowrap;
+  border: 1px solid transparent;
+}
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--green-700);
+  color: white;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.18) inset,
+    0 10px 24px -8px rgba(30, 106, 71, 0.45);
+}
+.btn-primary:hover { background: var(--green-900); }
+
+.btn-outline {
+  background: white;
+  border-color: var(--hair-2);
+  color: var(--ink);
+}
+.btn-outline:hover { background: var(--bg-surface-2); border-color: var(--ink-3); }
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--hair-2);
+  color: var(--ink-2);
+}
+.btn-ghost:hover { background: var(--bg-surface-2); color: var(--ink); }
+
+.btn-danger {
+  background: var(--red-700);
+  color: white;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.14) inset,
+    0 10px 24px -8px rgba(159, 45, 36, 0.45);
+}
+.btn-danger:hover { background: #7C1F18; }
+
+.btn-sm { padding: 7px 12px; font-size: 12.5px; }
+.btn-lg { padding: 14px 22px; font-size: 15px; }
+
+/* ---------- Card header (used inside transcript / symptoms / class cards) ---------- */
+.card-h {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--hair);
+  background: var(--bg-surface-2);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.card-h strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ---------- Tier pills ---------- */
+.tier-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 10px 4px 8px;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.tier-pill .d {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.tier-pill.green {
+  background: var(--green-50);
+  color: var(--green-700);
+  border-color: var(--green-150);
+}
+.tier-pill.green .d { background: var(--green-500); box-shadow: 0 0 0 3px rgba(47,139,94,0.18); }
+.tier-pill.amber {
+  background: var(--amber-50);
+  color: var(--amber-700);
+  border-color: var(--amber-300);
+}
+.tier-pill.amber .d { background: var(--amber-500); box-shadow: 0 0 0 3px rgba(212,160,60,0.22); }
+.tier-pill.red {
+  background: var(--red-50);
+  color: var(--red-700);
+  border-color: rgba(200,71,59,0.25);
+}
+.tier-pill.red .d { background: var(--red-500); box-shadow: 0 0 0 3px rgba(200,71,59,0.22); }
+.tier-pill.live {
+  background: rgba(47,139,94,0.08);
+  color: var(--green-700);
+  border-color: var(--green-150);
+}
+.tier-pill.live .d {
+  background: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(47,139,94,0.18);
+  animation: pulseDot 1.4s infinite;
+}
+
+/* ---------- Spinner ---------- */
+.spinner {
+  width: 12px; height: 12px;
+  border: 1.6px solid var(--hair-2);
+  border-top-color: var(--green-700);
+  border-radius: 50%;
+  animation: spin 0.85s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Fade-in entrance helpers ---------- */
+.fadein {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: fadein 0.5s ease forwards;
+}
+.fadein.delay-1 { animation-delay: 0.08s; }
+.fadein.delay-2 { animation-delay: 0.16s; }
+.fadein.delay-3 { animation-delay: 0.24s; }
+@keyframes fadein {
+  to { opacity: 1; transform: none; }
+}

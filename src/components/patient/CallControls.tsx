@@ -1,7 +1,6 @@
 "use client";
 
 import { Mic, MicOff, PhoneOff, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { CallStatus } from "@/hooks/useVapiCall";
 
 interface Props {
@@ -22,72 +21,87 @@ export default function CallControls({
 }: Props) {
   if (status === "idle") {
     return (
-      <Button
-        size="lg"
-        className="bg-green-600 hover:bg-green-700 text-white gap-2"
+      <button
+        type="button"
+        className="inline-flex items-center gap-2 rounded-full bg-[#2f8b5e] px-5 py-2.5 text-sm font-semibold text-[#14241c] transition-colors hover:bg-[#9bc9ac]"
         onClick={onStart}
       >
         <Mic className="w-5 h-5" />
-        Start Consultation
-      </Button>
+        Start call
+      </button>
     );
   }
 
   if (status === "connecting") {
     return (
-      <Button size="lg" disabled className="gap-2">
+      <button
+        type="button"
+        disabled
+        className="inline-flex items-center gap-2 rounded-full bg-white/10 px-5 py-2.5 text-sm text-[#bfc8c2]"
+      >
         <Loader2 className="w-5 h-5 animate-spin" />
-        Connecting…
-      </Button>
+        Connecting
+      </button>
     );
   }
 
   if (status === "active") {
     return (
-      <div className="flex gap-2">
-        <Button
-          variant="outline"
-          size="icon"
+      <div className="flex items-center gap-3">
+        <span className="hidden items-center gap-2 text-xs uppercase text-[#bfc8c2] sm:flex" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
+          <span className="h-2 w-2 rounded-full bg-[#2f8b5e] shadow-[0_0_0_3px_rgba(47,139,94,0.3)]" />
+          Live
+        </span>
+        <span className="h-5 w-px bg-white/10" />
+        <button
+          type="button"
           onClick={onToggleMute}
           className={
-            isMuted ? "border-amber-400 text-amber-600" : ""
+            isMuted
+              ? "grid h-9 w-9 place-items-center rounded-full bg-[#d4a03c] text-[#14241c]"
+              : "grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/15"
           }
-          title={isMuted ? "Unmute" : "Mute"}
+          aria-label={isMuted ? "Unmute call" : "Mute call"}
         >
           {isMuted ? (
             <MicOff className="w-4 h-4" />
           ) : (
             <Mic className="w-4 h-4" />
           )}
-        </Button>
-        <Button
-          size="sm"
-          variant="destructive"
+        </button>
+        <button
+          type="button"
           onClick={onEnd}
-          className="gap-2"
+          className="inline-flex items-center gap-2 rounded-full bg-[#9f2d24] px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-[#7c1f18]"
         >
           <PhoneOff className="w-4 h-4" />
           End Call
-        </Button>
+        </button>
       </div>
     );
   }
 
   if (status === "ended") {
     return (
-      <p className="text-sm text-muted-foreground">Consultation Complete</p>
+      <button
+        type="button"
+        className="inline-flex items-center gap-2 rounded-full bg-[#2f8b5e] px-5 py-2.5 text-sm font-semibold text-[#14241c] transition-colors hover:bg-[#9bc9ac]"
+        onClick={onStart}
+      >
+        <Mic className="w-5 h-5" />
+        New call
+      </button>
     );
   }
 
   // error state
   return (
-    <Button
-      size="sm"
-      variant="outline"
+    <button
+      type="button"
       onClick={onStart}
-      className="border-red-400 text-red-600 gap-2"
+      className="inline-flex items-center gap-2 rounded-full border border-[#e59a92] bg-[#fbe5e1] px-5 py-2.5 text-sm font-semibold text-[#9f2d24]"
     >
       Try Again
-    </Button>
+    </button>
   );
 }

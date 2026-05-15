@@ -1,0 +1,683 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Session TRG-8841-K7 · PreCare Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+body.admin { background: var(--bg-app); }
+.admin-shell { max-width: 1440px; margin: 0 auto; }
+
+.admin-bar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 24px;
+  background: white;
+  border-bottom: 1px solid var(--hair);
+}
+.admin-bar .crumbs {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 8px;
+}
+.admin-bar .crumbs strong { color: var(--ink); font-weight: 500; }
+.admin-bar .crumbs a:hover { color: var(--ink); }
+.admin-bar .spacer { flex: 1; }
+.admin-bar .user { display: flex; align-items: center; gap: 10px; font-size: 13px; }
+.admin-bar .user .av {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--green-150); color: var(--green-700);
+  display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+}
+.admin-bar .user strong { display: block; }
+.admin-bar .user small {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.detail-content { padding: 24px 24px 60px; }
+
+/* Hero */
+.detail-hero {
+  display: flex; align-items: flex-start; gap: 16px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.detail-hero .title-block { flex: 1; min-width: 280px; }
+.detail-hero .title-block .eyebrow { margin-bottom: 8px; }
+.detail-hero h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+.detail-hero h1 .mono {
+  font-family: var(--font-mono);
+  color: var(--ink-3);
+  font-size: 22px;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.detail-hero .pills-row {
+  display: flex; gap: 8px; flex-wrap: wrap;
+  margin-top: 10px;
+}
+.detail-hero .pills-row .meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  padding: 3px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+}
+.detail-hero .actions { display: flex; gap: 8px; flex-wrap: wrap; align-self: flex-end; }
+
+/* Main split */
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 16px;
+}
+@media (max-width: 1000px) { .detail-grid { grid-template-columns: 1fr; } }
+
+/* Outcome card */
+.outcome-card {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBF1EF 100%);
+  border: 1px solid rgba(200,71,59,0.2);
+  border-radius: 16px;
+  padding: 22px 24px;
+  margin-bottom: 14px;
+  overflow: hidden;
+  position: relative;
+}
+.outcome-card::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 80% at 100% 0%, rgba(200,71,59,0.12) 0%, rgba(200,71,59,0) 60%);
+  pointer-events: none;
+}
+.outcome-card > * { position: relative; }
+.outcome-card .top {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px; flex-wrap: wrap; gap: 12px;
+}
+.outcome-card h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 28px;
+  letter-spacing: -0.025em;
+  margin: 0; line-height: 1.1;
+}
+.outcome-card h2 em {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400;
+  color: var(--red-700);
+}
+.outcome-card .summary {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  margin: 0 0 18px;
+  max-width: 70ch;
+  line-height: 1.55;
+}
+.outcome-card .conf-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin: 18px 0 16px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(200,71,59,0.1);
+}
+@media (max-width: 700px) { .outcome-card .conf-row { grid-template-columns: 1fr 1fr; } }
+.outcome-card .conf-row .kv .k {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+}
+.outcome-card .conf-row .kv .v {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.outcome-card .conf-row .kv .v.bad { color: var(--red-700); }
+.outcome-card .conf-bar {
+  height: 6px; border-radius: 6px; background: white;
+  border: 1px solid var(--hair); overflow: hidden;
+  margin-top: 8px;
+}
+.outcome-card .conf-bar i { display: block; height: 100%; background: var(--red-500); }
+
+.outcome-card .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Transcript */
+.transcript-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.transcript-card .head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.transcript-card .head strong { color: var(--ink); font-weight: 500; }
+.transcript-card .head .toolbar { display: flex; gap: 8px; }
+.transcript-card .head .toolbar button {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
+  padding: 4px 8px;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+}
+.transcript-card .head .toolbar button:hover { color: var(--ink); background: var(--bg-surface-2); }
+.transcript-card .body {
+  padding: 18px;
+  display: grid; gap: 16px;
+  max-height: 720px;
+  overflow: auto;
+}
+.turn {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 14px;
+  align-items: baseline;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.turn .ts {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  letter-spacing: 0.06em;
+  padding-top: 4px;
+}
+.turn .who {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+.turn.asha .who { background: var(--green-50); color: var(--green-700); }
+.turn.user .who { background: var(--bg-surface-2); color: var(--ink-2); }
+.turn .text { color: var(--ink); }
+.turn.user .text { color: var(--ink-2); }
+.turn.flagged .text {
+  background: var(--red-50);
+  padding: 8px 12px;
+  border-radius: 6px;
+  border-left: 3px solid var(--red-500);
+  position: relative;
+}
+.turn.flagged .flag-tag {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 9.5px;
+  letter-spacing: 0.1em; color: var(--red-700);
+  background: white; border: 1px solid rgba(200,71,59,0.2);
+  padding: 1px 6px; border-radius: 4px;
+  margin-top: 6px;
+}
+.turn.final-call .text {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--green-900);
+  padding: 12px 14px;
+  background: var(--green-50);
+  border: 1px solid var(--green-150);
+  border-radius: 8px;
+}
+
+/* Side stack */
+.side-stack { display: grid; gap: 14px; align-content: start; }
+.side-card {
+  background: white;
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.side-card .head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.side-card .head strong { color: var(--ink); font-weight: 500; }
+.side-card .body { padding: 14px 16px; }
+
+/* Symptoms */
+.sympt-mini {
+  display: grid;
+  grid-template-columns: 28px 1fr auto;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--hair);
+  font-size: 13px;
+}
+.sympt-mini:last-child { border-bottom: 0; }
+.sympt-mini .sev {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono);
+  font-size: 10px; font-weight: 500;
+  color: white;
+}
+.sympt-mini.s3 .sev { background: var(--red-500); }
+.sympt-mini.s2 .sev { background: var(--amber-500); }
+.sympt-mini.s1 .sev { background: var(--green-500); }
+.sympt-mini .lab { color: var(--ink); font-weight: 500; }
+.sympt-mini .quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--ink-3);
+  font-size: 12px;
+  margin-top: 1px;
+}
+.sympt-mini .code {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  color: var(--ink-3);
+  background: var(--bg-surface-2);
+  padding: 2px 6px;
+  border-radius: 4px;
+  align-self: start;
+  margin-top: 2px;
+}
+
+/* Flag list */
+.flag-list {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 8px;
+  font-size: 12.5px;
+}
+.flag-list li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--red-50);
+  border: 1px solid rgba(200,71,59,0.16);
+  border-radius: 8px;
+  align-items: start;
+}
+.flag-list li code {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  background: white;
+  color: var(--red-700);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  align-self: center;
+}
+
+/* Audit */
+.audit {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+}
+.audit li {
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  gap: 10px;
+  align-items: baseline;
+}
+.audit li .ts { color: var(--ink-4); }
+.audit li .what { color: var(--ink-2); }
+.audit li .what code {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 0 5px;
+  background: var(--red-50);
+  color: var(--red-700);
+  border-radius: 3px;
+}
+.audit li .what strong { color: var(--ink); font-weight: 500; }
+
+/* Note composer */
+.note-row {
+  display: flex; gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--hair);
+}
+.note-row textarea {
+  flex: 1;
+  border: 1px solid var(--hair-2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 60px;
+  font-family: var(--font-sans);
+}
+.note-row textarea:focus { outline: none; border-color: var(--green-500); box-shadow: 0 0 0 3px rgba(47,139,94,0.15); }
+
+</style>
+</head>
+<body class="admin">
+
+<!-- Instrument strip -->
+<div class="instr-strip">
+  <span>PreCare · Admin</span>
+  <span class="live">Realtime feed connected</span>
+  <span>Asha v1.4</span>
+  <span>EU-WEST-1</span>
+  <span class="right">
+    <a href="admin.html">← All sessions</a>
+  </span>
+</div>
+
+<div class="admin-shell">
+
+  <!-- Top bar -->
+  <div class="admin-bar">
+    <a href="admin.html" class="brand" style="font-size: 16px;">
+      <div class="mk">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1.5V12.5M1.5 7H12.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>PreCare<small>Admin</small></div>
+    </a>
+
+    <span class="crumbs">
+      / <a href="admin.html">Sessions</a> / <strong>TRG-8841-K7</strong>
+    </span>
+
+    <span class="spacer"></span>
+
+    <div class="user">
+      <div class="av">SI</div>
+      <div>
+        <strong>Dr. S. Iyer</strong>
+        <small>Triage Lead</small>
+      </div>
+    </div>
+    <a href="admin-login.html" class="btn btn-outline btn-sm">Sign out</a>
+  </div>
+
+  <div class="detail-content">
+
+    <!-- Hero -->
+    <div class="detail-hero">
+      <div class="title-block">
+        <div class="eyebrow">Session detail</div>
+        <h1>Session <span class="mono">TRG-8841-K7</span></h1>
+        <div class="pills-row">
+          <span class="tier-pill red"><span class="d"></span>Emergency · escalated</span>
+          <span class="meta">14:08:32 → 14:12:14</span>
+          <span class="meta">3 min 42 s · 8 turns</span>
+          <span class="meta">Anon · 54M</span>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 1h6l3 3v9H3zM9 1v3h3M7 7v4M5 9l2 2 2-2"/>
+          </svg>
+          Export PDF
+        </button>
+        <button class="btn btn-outline btn-sm">
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 1v12M3 2h7l-1.5 2.5L10 7H3"/>
+          </svg>
+          Flag for clinical review
+        </button>
+        <button class="btn btn-danger btn-sm">
+          Open in ER queue →
+        </button>
+      </div>
+    </div>
+
+    <div class="detail-grid">
+
+      <!-- Left: outcome + transcript -->
+      <div>
+
+        <div class="outcome-card">
+          <div class="top">
+            <h2>Recommendation: <em>Emergency Room.</em></h2>
+            <span class="tier-pill red"><span class="d"></span>ESI-1 · ACS path</span>
+          </div>
+          <p class="summary">
+            Symptom pattern is consistent with <strong>acute coronary syndrome</strong> red-flag protocol: tight, squeezing chest pain
+            that radiates to the left arm with dyspnoea on exertion. Patient instructed to call 112 immediately and remain seated.
+            Symptom summary auto-shared with St. Mary’s ER queue.
+          </p>
+
+          <div class="conf-row">
+            <div class="kv">
+              <div class="k">Confidence</div>
+              <div class="v bad">94%</div>
+              <div class="conf-bar"><i style="width: 94%;"></i></div>
+            </div>
+            <div class="kv">
+              <div class="k">Protocol</div>
+              <div class="v">ESI-1</div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 4px;">acute-cardiac-v3</div>
+            </div>
+            <div class="kv">
+              <div class="k">Red-flags fired</div>
+              <div class="v">4</div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--red-700); margin-top: 4px;">2 cardiac · 1 resp · 1 neuro</div>
+            </div>
+            <div class="kv">
+              <div class="k">Asha model</div>
+              <div class="v" style="font-size: 14px; font-family: var(--font-mono); letter-spacing: 0;">v1.4-2026.04</div>
+              <div style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); margin-top: 4px;">prod / EU-W1</div>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-danger btn-sm">⚠ Notify ER receiving doctor</button>
+            <button class="btn btn-outline btn-sm">Replay audio</button>
+            <button class="btn btn-outline btn-sm">View protocol</button>
+          </div>
+        </div>
+
+        <!-- Transcript -->
+        <div class="transcript-card">
+          <div class="head">
+            <strong>Full transcript · 8 turns</strong>
+            <div class="toolbar">
+              <button>Copy</button>
+              <button>Download .txt</button>
+              <button>Replay audio ▷</button>
+            </div>
+          </div>
+          <div class="body">
+
+            <div class="turn user">
+              <span class="ts">00:00</span>
+              <div>
+                <span class="who">Patient</span>
+                <div class="text">“I've had a sharp pain in my chest for the last hour, and I feel a bit dizzy when I stand up.”</div>
+              </div>
+            </div>
+
+            <div class="turn asha">
+              <span class="ts">00:18</span>
+              <div>
+                <span class="who">Asha</span>
+                <div class="text">When you say sharp pain — does it feel more like a stab, a tight squeeze, or a dull pressure?</div>
+              </div>
+            </div>
+
+            <div class="turn user flagged">
+              <span class="ts">00:34</span>
+              <div>
+                <span class="who">Patient</span>
+                <div class="text">
+                  “More like a tight squeeze. It got worse when I climbed the stairs.”
+                </div>
+                <span class="flag-tag">▲ RF-CARD-07 · pain on exertion</span>
+              </div>
+            </div>
+
+            <div class="turn asha">
+              <span class="ts">00:42</span>
+              <div>
+                <span class="who">Asha</span>
+                <div class="text">Got it. Does the pain travel anywhere else — like your arm, jaw, or back? And do you feel short of breath?</div>
+              </div>
+            </div>
+
+            <div class="turn user flagged">
+              <span class="ts">01:06</span>
+              <div>
+                <span class="who">Patient</span>
+                <div class="text">
+                  “Yes, my left arm hurts too. And I do feel a bit short of breath.”
+                </div>
+                <span class="flag-tag">▲ RF-CARD-03 · radiation to arm</span>
+              </div>
+            </div>
+
+            <div class="turn asha">
+              <span class="ts">01:14</span>
+              <div>
+                <span class="who">Asha</span>
+                <div class="text">Thank you. I’m detecting a pattern that needs urgent care. Do you have anyone with you right now, and is your front door accessible?</div>
+              </div>
+            </div>
+
+            <div class="turn user">
+              <span class="ts">01:32</span>
+              <div>
+                <span class="who">Patient</span>
+                <div class="text">“I’m alone but my neighbour is upstairs. The door is unlocked.”</div>
+              </div>
+            </div>
+
+            <div class="turn asha final-call">
+              <span class="ts">01:40</span>
+              <div>
+                <span class="who">Asha · final</span>
+                <div class="text">
+                  Please call 112 right now — I’ll guide you. Stay seated, take an aspirin if you have one and aren’t allergic, and don’t hang up.
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: side stack -->
+      <div class="side-stack">
+
+        <div class="side-card">
+          <div class="head"><strong>Symptoms extracted</strong><span>4 found</span></div>
+          <div class="body">
+            <div class="sympt-mini s3">
+              <div class="sev">3</div>
+              <div>
+                <div class="lab">Chest pain — squeezing</div>
+                <div class="quote">“like a tight squeeze… worse when I climbed stairs”</div>
+              </div>
+              <span class="code">R07.9</span>
+            </div>
+            <div class="sympt-mini s3">
+              <div class="sev">3</div>
+              <div>
+                <div class="lab">Radiation to left arm</div>
+                <div class="quote">“my left arm hurts too”</div>
+              </div>
+              <span class="code">RF-03</span>
+            </div>
+            <div class="sympt-mini s2">
+              <div class="sev">2</div>
+              <div>
+                <div class="lab">Dyspnoea on exertion</div>
+                <div class="quote">“a bit short of breath”</div>
+              </div>
+              <span class="code">R06.0</span>
+            </div>
+            <div class="sympt-mini s2">
+              <div class="sev">2</div>
+              <div>
+                <div class="lab">Postural dizziness</div>
+                <div class="quote">“dizzy when I stand up”</div>
+              </div>
+              <span class="code">R42</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="head"><strong>Red-flags triggered</strong><span>4 of 142 rules</span></div>
+          <div class="body">
+            <ul class="flag-list">
+              <li><code>RF-CARD-03</code><span>Chest pain radiating to left arm</span></li>
+              <li><code>RF-CARD-07</code><span>Tight, squeezing quality on exertion</span></li>
+              <li><code>RF-RESP-02</code><span>Dyspnoea on minimal exertion</span></li>
+              <li><code>RF-NEUR-01</code><span>Dizziness on postural change</span></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="side-card">
+          <div class="head"><strong>Audit trail</strong><span>Immutable</span></div>
+          <div class="body">
+            <ul class="audit">
+              <li><span class="ts">00:00:00</span><span class="what">Session created · anon-9F23 · vapi-eu-w1</span></li>
+              <li><span class="ts">00:00:18</span><span class="what">Consent accepted</span></li>
+              <li><span class="ts">00:00:34</span><span class="what">Red-flag <code>CARD-07</code> triggered</span></li>
+              <li><span class="ts">00:01:06</span><span class="what">Red-flag <code>CARD-03</code> triggered</span></li>
+              <li><span class="ts">00:01:40</span><span class="what">Tier elevated to <strong style="color:var(--red-700)">RED</strong></span></li>
+              <li><span class="ts">00:03:42</span><span class="what">Session ended · summary issued</span></li>
+              <li><span class="ts">00:04:08</span><span class="what">Reviewed by <strong>Dr. S. Iyer</strong></span></li>
+              <li><span class="ts">00:04:31</span><span class="what">Forwarded to ER queue</span></li>
+            </ul>
+
+            <div class="note-row">
+              <textarea placeholder="Add a clinical note (visible to staff only)…"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; margin-top: 8px;">
+              <button class="btn btn-outline btn-sm">Save note</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,7 +1,6 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import type { Session } from "@/lib/types";
 
 interface Props {
@@ -25,34 +24,33 @@ export default function LiveQueue({ sessions }: Props) {
 
   if (active.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-2">
+      <p className="py-4 text-sm text-[#6f7a73]">
         No active sessions in queue.
       </p>
     );
   }
 
   return (
-    <div className="space-y-2">
+    <div className="grid gap-2">
       {active.map((session) => (
-        <Card
+        <button
+          type="button"
           key={session.id}
-          className="cursor-pointer hover:bg-muted/50 transition-colors"
+          className="flex items-center justify-between rounded-[10px] border border-[#e8e5dc] bg-[#faf8f1] px-4 py-3 text-left transition-colors hover:bg-white"
           onClick={() => router.push(`/admin/${session.id}`)}
         >
-          <CardContent className="py-3 px-4 flex items-center justify-between">
-            <div>
-              <p className="text-sm font-mono font-medium">
+          <div>
+              <p className="text-sm font-medium text-[#14241c]" style={{ fontFamily: "var(--font-mono)" }}>
                 {session.id.slice(0, 8)}…
               </p>
-              <p className="text-xs text-muted-foreground uppercase">
+              <p className="text-[10px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
                 {session.language}
               </p>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[#6f7a73]">
               {relativeTime(session.started_at)}
             </p>
-          </CardContent>
-        </Card>
+        </button>
       ))}
     </div>
   );

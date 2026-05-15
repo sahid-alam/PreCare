@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import type { CSSProperties } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import type { TranscriptEntry } from "@/lib/types";
@@ -19,48 +20,74 @@ export default function TranscriptPanel({ transcript, status }: Props) {
   }, [transcript]);
 
   return (
-    <ScrollArea className="h-full min-h-[300px] rounded-lg border bg-muted/30">
-      <div className="flex flex-col gap-2 p-3">
+    <div className="pc-card overflow-hidden">
+      <div className="pc-card-head">
+        <strong className="font-medium text-[#14241c]">Conversation transcript</strong>
+        <span>{transcript.length} turns</span>
+      </div>
+      <ScrollArea className="h-[420px]">
+      <div className="grid gap-4 p-5">
         {transcript.length === 0 && (
-          <p className="text-sm text-muted-foreground text-center mt-10">
+          <div className="py-12 text-center text-[11px] uppercase text-[#97a199]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
             Your conversation will appear here
-          </p>
+          </div>
         )}
         {transcript.map((entry, i) => (
           <div
             key={i}
             className={cn(
-              "max-w-[80%] rounded-lg px-3 py-2 text-sm",
-              entry.role === "user"
-                ? "self-end bg-blue-600 text-white"
-                : "self-start bg-white text-foreground border shadow-sm"
+              "grid grid-cols-[70px_1fr] items-baseline gap-3 text-sm leading-6",
+              entry.role === "assistant" ? "text-[#14241c]" : "text-[#3c4a43]"
             )}
           >
-            <p className="text-[10px] font-semibold mb-0.5 opacity-60 uppercase tracking-wide">
-              {entry.role === "user" ? "You" : "Asha"}
-            </p>
-            {entry.text}
+            <span className="pt-1 text-[10.5px] text-[#97a199]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
+              {new Date(entry.ts).toLocaleTimeString("en-IN", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+            <div>
+              <span
+                className={cn(
+                  "mb-1 inline-block rounded px-2 py-0.5 text-[10px] uppercase",
+                  entry.role === "assistant"
+                    ? "bg-[#edf4ee] text-[#1e6a47]"
+                    : "bg-[#faf8f1] text-[#3c4a43]"
+                )}
+                style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.14em" }}
+              >
+                {entry.role === "user" ? "Patient" : "Asha"}
+              </span>
+              <p>{entry.text}</p>
+            </div>
           </div>
         ))}
         {status === "active" && (
-          <div className="self-start bg-white border shadow-sm rounded-lg px-3 py-2 text-sm text-muted-foreground flex gap-1 items-center">
-            <span className="animate-bounce inline-block">●</span>
-            <span
-              className="animate-bounce inline-block"
-              style={{ animationDelay: "150ms" }}
-            >
-              ●
+          <div className="grid grid-cols-[70px_1fr] items-center gap-3 text-sm text-[#6f7a73]">
+            <span className="text-[10.5px] text-[#97a199]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.06em" }}>
+              live
             </span>
-            <span
-              className="animate-bounce inline-block"
-              style={{ animationDelay: "300ms" }}
-            >
-              ●
-            </span>
+            <div className="flex items-center gap-3 rounded-lg border border-[#e8e5dc] bg-white px-3 py-2">
+              <div className="flex h-5 items-center gap-[3px]">
+                {[10, 16, 8, 14, 6].map((peak, index) => (
+                  <span
+                    key={peak + index}
+                    className="block w-[3px] rounded-full bg-[#2f8b5e]"
+                    style={{
+                      "--peak": `${peak}px`,
+                      animation: "pc-wave 1.4s ease-in-out infinite",
+                      animationDelay: `${index * 90}ms`,
+                    } as CSSProperties}
+                  />
+                ))}
+              </div>
+              <span>Asha is listening</span>
+            </div>
           </div>
         )}
         <div ref={bottomRef} />
       </div>
-    </ScrollArea>
+      </ScrollArea>
+    </div>
   );
 }

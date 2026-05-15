@@ -11,15 +11,15 @@ interface Props {
 }
 
 const tierConfig: Record<CareTier, { label: string; cls: string }> = {
-  home: { label: "Home", cls: "bg-green-100 text-green-800 border-green-200" },
-  clinic: { label: "Clinic", cls: "bg-amber-100 text-amber-800 border-amber-200" },
-  er: { label: "ER", cls: "bg-red-100 text-red-800 border-red-200" },
+  home: { label: "Home", cls: "bg-[#edf4ee] text-[#1e6a47] border-[#d7e8dc]" },
+  clinic: { label: "Clinic", cls: "bg-[#faefd5] text-[#8a5a12] border-[#e9c58a]" },
+  er: { label: "Emergency", cls: "bg-[#fbe5e1] text-[#9f2d24] border-[#e59a92]" },
 };
 
 const statusCls: Record<string, string> = {
-  active: "bg-blue-100 text-blue-800 border-blue-200",
-  complete: "bg-gray-100 text-gray-800 border-gray-200",
-  failed: "bg-red-100 text-red-800 border-red-200",
+  active: "bg-[#edf4ee] text-[#1e6a47] border-[#d7e8dc]",
+  complete: "bg-[#faf8f1] text-[#3c4a43] border-[#e8e5dc]",
+  failed: "bg-[#fbe5e1] text-[#9f2d24] border-[#e59a92]",
 };
 
 function formatDuration(s: number | null): string {
@@ -41,26 +41,31 @@ export default function SessionsTable({ sessions }: Props) {
 
   if (sessions.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground py-6 text-center">
+      <div className="rounded-xl border border-[#e8e5dc] bg-white p-10 text-center text-sm text-[#6f7a73]">
         No sessions yet. Start a triage call from the patient page.
-      </p>
+      </div>
     );
   }
 
   return (
-    <div className="rounded-lg border overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-[#e8e5dc] bg-white">
+      <div className="flex items-center justify-between border-b border-[#e8e5dc] px-4 py-3 text-[11px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
+        <strong className="font-medium text-[#14241c]">Recent sessions</strong>
+        <span>{sessions.length} loaded</span>
+      </div>
       <table className="w-full text-sm">
-        <thead className="bg-muted/50">
+        <thead className="bg-[#faf8f1]">
           <tr>
-            {["Session", "Status", "Tier", "Lang", "Duration", "Started"].map(
+            {["Session ID", "Status", "Tier", "Lang", "Duration", "Started", ""].map(
               (h, i) => (
                 <th
                   key={h}
                   className={cn(
-                    "text-left px-4 py-2 text-xs font-semibold text-muted-foreground uppercase",
-                    i >= 3 && "hidden md:table-cell",
-                    i >= 5 && "hidden lg:table-cell"
+                    "border-b border-[#e8e5dc] px-4 py-3 text-left text-[10px] font-medium uppercase text-[#6f7a73]",
+                    i >= 3 && i < 6 && "hidden md:table-cell",
+                    i >= 5 && i < 6 && "hidden lg:table-cell"
                   )}
+                  style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}
                 >
                   {h}
                 </th>
@@ -68,7 +73,7 @@ export default function SessionsTable({ sessions }: Props) {
             )}
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody>
           {sessions.map((session) => {
             const tierCfg = session.final_tier
               ? tierConfig[session.final_tier]
@@ -79,12 +84,12 @@ export default function SessionsTable({ sessions }: Props) {
             return (
               <tr
                 key={session.id}
-                className="hover:bg-muted/30 cursor-pointer transition-colors"
+                className="cursor-pointer border-b border-[#e8e5dc] transition-colors last:border-b-0 hover:bg-[#faf8f1]"
                 onClick={() => router.push(`/admin/${session.id}`)}
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs">
+                    <span className="text-xs text-[#14241c]" style={{ fontFamily: "var(--font-mono)" }}>
                       {session.id.slice(0, 8)}
                     </span>
                     {session.red_flag_triggered && (
@@ -95,7 +100,7 @@ export default function SessionsTable({ sessions }: Props) {
                 <td className="px-4 py-3">
                   <Badge
                     variant="outline"
-                    className={cn("text-xs capitalize", sCls)}
+                    className={cn("rounded-full text-[10.5px] capitalize", sCls)}
                   >
                     {session.status}
                   </Badge>
@@ -104,22 +109,25 @@ export default function SessionsTable({ sessions }: Props) {
                   {tierCfg ? (
                     <Badge
                       variant="outline"
-                      className={cn("text-xs", tierCfg.cls)}
+                      className={cn("rounded-full text-[10.5px]", tierCfg.cls)}
                     >
                       {tierCfg.label}
                     </Badge>
                   ) : (
-                    <span className="text-muted-foreground text-xs">—</span>
+                    <span className="text-xs text-[#97a199]">—</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-xs uppercase hidden md:table-cell">
+                <td className="hidden px-4 py-3 text-xs uppercase text-[#3c4a43] md:table-cell">
                   {session.language}
                 </td>
-                <td className="px-4 py-3 text-xs hidden md:table-cell">
+                <td className="hidden px-4 py-3 text-xs text-[#3c4a43] md:table-cell" style={{ fontFamily: "var(--font-mono)" }}>
                   {formatDuration(session.duration_seconds)}
                 </td>
-                <td className="px-4 py-3 text-xs text-muted-foreground hidden lg:table-cell">
+                <td className="hidden px-4 py-3 text-xs text-[#6f7a73] lg:table-cell">
                   {formatDate(session.started_at)}
+                </td>
+                <td className="px-4 py-3 text-right text-[#97a199] transition-colors group-hover:text-[#1e6a47]">
+                  →
                 </td>
               </tr>
             );

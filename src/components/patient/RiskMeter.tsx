@@ -7,67 +7,89 @@ interface Props {
   level: RiskLevel | null;
 }
 
-const segments = [
-  { id: "low" as RiskLevel, label: "LOW", color: "bg-green-500", text: "text-green-700" },
-  { id: "medium" as RiskLevel, label: "MEDIUM", color: "bg-yellow-400", text: "text-yellow-700" },
-  { id: "high" as RiskLevel, label: "HIGH", color: "bg-orange-500", text: "text-orange-700" },
-  { id: "er" as RiskLevel, label: "EMERGENCY", color: "bg-red-600", text: "text-red-700" },
-];
-
 const levelLabels: Record<RiskLevel, string> = {
-  low: "Low Risk",
-  medium: "Moderate Risk",
-  high: "High Risk",
+  low: "Home care",
+  medium: "Clinic visit",
+  high: "High risk",
   er: "Emergency",
 };
 
+const scores: Record<RiskLevel, number> = {
+  low: 24,
+  medium: 54,
+  high: 76,
+  er: 94,
+};
+
+const colors: Record<RiskLevel, string> = {
+  low: "#2f8b5e",
+  medium: "#d4a03c",
+  high: "#d4a03c",
+  er: "#c8473b",
+};
+
 export default function RiskMeter({ level }: Props) {
-  const activeIdx = level
-    ? segments.findIndex((s) => s.id === level)
-    : -1;
+  const score = level ? scores[level] : 0;
+  const stroke = level ? colors[level] : "#97a199";
+  const circumference = 2 * Math.PI * 86;
+  const offset = circumference - (score / 100) * circumference;
 
   return (
-    <div className="space-y-2">
-      <div className="flex gap-1 h-3 rounded-full overflow-hidden">
-        {segments.map((seg, idx) => (
-          <div
-            key={seg.id}
-            className={cn(
-              "flex-1 transition-all duration-500",
-              level === "er"
-                ? cn("bg-red-600", idx === 3 && "animate-pulse")
-                : activeIdx >= 0 && idx <= activeIdx
-                ? seg.color
-                : "bg-muted"
-            )}
+    <div className="w-full max-w-[220px]">
+      <div className="relative aspect-square w-full">
+        <svg viewBox="0 0 220 220" className="h-full w-full -rotate-90">
+          <circle cx="110" cy="110" r="86" fill="none" stroke="#f3f1ea" strokeWidth="14" />
+          <circle
+            cx="110"
+            cy="110"
+            r="86"
+            fill="none"
+            stroke={stroke}
+            strokeLinecap="round"
+            strokeWidth="14"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            className={cn("transition-all duration-700", level === "er" && "animate-pulse")}
           />
-        ))}
+          <g stroke="#dad6cb" strokeWidth="1">
+            <path d="M110 18v12" />
+            <path d="M110 190v12" />
+            <path d="M18 110h12" />
+            <path d="M190 110h12" />
+          </g>
+        </svg>
+        <div className="absolute inset-0 grid place-items-center text-center">
+          <div>
+            <div className="font-display text-[48px] font-medium leading-none text-[#14241c]">
+              {score}
+            </div>
+            <div className="mt-1 text-[10px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.16em" }}>
+              Risk score
+            </div>
+            <div className="font-serif-display mt-1 text-lg italic" style={{ color: stroke }}>
+              {level ? levelLabels[level] : "pending"}
+            </div>
+          </div>
+        </div>
       </div>
-      <div className="flex gap-1">
-        {segments.map((seg, idx) => (
+      <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-[10px] border border-[#e8e5dc] text-[10px] uppercase" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
+        {[
+          ["low", "Home", "#2f8b5e"],
+          ["medium", "Clinic", "#d4a03c"],
+          ["er", "ER", "#c8473b"],
+        ].map(([id, label, color]) => (
           <div
-            key={seg.id}
+            key={id}
             className={cn(
-              "flex-1 text-center text-[9px] font-semibold",
-              activeIdx >= 0 && idx <= activeIdx
-                ? seg.text
-                : "text-muted-foreground"
+              "flex items-center justify-between border-r border-[#e8e5dc] bg-[#faf8f1] px-3 py-2 text-[#6f7a73] last:border-r-0",
+              level === id && "bg-white text-[#14241c]"
             )}
           >
-            {seg.label}
+            <span>{label}</span>
+            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
           </div>
         ))}
       </div>
-      <p
-        className={cn(
-          "text-center text-sm font-medium",
-          level
-            ? (segments.find((s) => s.id === level)?.text ?? "text-foreground")
-            : "text-muted-foreground"
-        )}
-      >
-        {level ? levelLabels[level] : "Awaiting assessment"}
-      </p>
     </div>
   );
 }

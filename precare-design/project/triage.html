@@ -1,0 +1,1091 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Triage · PreCare</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+/* ============================================================
+   Triage page (/triage)
+   ============================================================ */
+body.triage { background: var(--bg-app); min-height: 100vh; }
+.triage-shell { max-width: 1240px; margin: 0 auto; padding: 16px 20px 120px; }
+
+/* Disclaimer overlay */
+.disclaimer-veil {
+  position: fixed; inset: 0;
+  background: rgba(20, 36, 28, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 100;
+  display: grid; place-items: center;
+  padding: 24px;
+}
+.disclaimer-veil[hidden] { display: none; }
+.disclaimer {
+  background: var(--bg-surface);
+  border-radius: 18px;
+  width: min(560px, 100%);
+  padding: 36px 36px 28px;
+  box-shadow: 0 40px 80px -20px rgba(0,0,0,0.4);
+  position: relative;
+  overflow: hidden;
+}
+.disclaimer::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(60% 60% at 100% 0%, rgba(155,201,172,0.32) 0%, rgba(155,201,172,0) 70%);
+  pointer-events: none;
+}
+.disclaimer > * { position: relative; }
+.disclaimer .eyebrow { margin-bottom: 18px; }
+.disclaimer .eyebrow::before { background: var(--green-700); }
+.disclaimer h1 {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 30px; letter-spacing: -0.025em; line-height: 1.1;
+  margin: 0 0 14px; text-wrap: balance;
+}
+.disclaimer h1 em {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--green-700);
+}
+.disclaimer p {
+  font-size: 14px; color: var(--ink-2); margin: 0 0 16px; line-height: 1.55;
+}
+.disclaimer ul {
+  list-style: none; padding: 0; margin: 0 0 18px;
+  font-size: 13px; display: grid; gap: 10px;
+}
+.disclaimer ul li {
+  display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start;
+  color: var(--ink-2); line-height: 1.45;
+}
+.disclaimer ul li svg { margin-top: 2px; color: var(--green-700); }
+.disclaimer .check {
+  display: flex; gap: 10px; align-items: start;
+  padding: 14px 14px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  margin-bottom: 16px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.5;
+}
+.disclaimer .check input { margin-top: 2px; accent-color: var(--green-700); width: 16px; height: 16px; flex-shrink: 0; }
+.disclaimer .actions { display: flex; gap: 10px; justify-content: flex-end; }
+.disclaimer .actions .btn-primary:disabled { opacity: 0.45; cursor: not-allowed; pointer-events: none; }
+.disclaimer .emergency-line {
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hair);
+  font-family: var(--font-mono); font-size: 11px; color: var(--red-700);
+  letter-spacing: 0.04em; display: flex; gap: 8px; align-items: center;
+}
+
+/* Top */
+.t-top {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 20px;
+}
+.t-top .session-meta {
+  display: flex; gap: 18px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.t-top .session-meta strong { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+
+/* Main grid */
+.t-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+@media (max-width: 1000px) {
+  .t-grid { grid-template-columns: 1fr; }
+}
+
+/* ---------- Status card (risk meter focal) ---------- */
+.status-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  padding: 24px 28px 28px;
+  position: relative;
+  overflow: hidden;
+}
+.status-card::before {
+  content: ""; position: absolute; inset: 0;
+  background:
+    radial-gradient(70% 90% at 90% 0%, rgba(155,201,172,0.16) 0%, rgba(155,201,172,0) 60%);
+  pointer-events: none;
+}
+.status-card > * { position: relative; }
+.status-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px;
+}
+.status-head .left { display: flex; align-items: center; gap: 14px; }
+.call-state {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--green-700);
+}
+.call-state::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green-500);
+  box-shadow: 0 0 0 4px rgba(47,139,94,0.18);
+  animation: pulseDot 1.6s infinite;
+}
+body.state-idle .call-state { color: var(--ink-3); }
+body.state-idle .call-state::before { background: var(--ink-3); box-shadow: none; animation: none; }
+body.state-ended .call-state { color: var(--red-700); }
+body.state-ended .call-state::before { background: var(--red-500); animation: none; }
+
+.status-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+@media (max-width: 700px) {
+  .status-grid { grid-template-columns: 1fr; }
+}
+
+/* Risk meter */
+.risk-meter {
+  position: relative;
+  width: 220px; height: 220px;
+}
+.risk-meter svg { width: 100%; height: 100%; }
+.risk-meter .center {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+.risk-meter .center .val {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 48px;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.risk-meter .center .lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-top: 4px;
+}
+.risk-meter .center .tier-label {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--green-700);
+  margin-top: 4px;
+  letter-spacing: 0;
+}
+
+/* Status side text */
+.status-side .label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.status-side h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 26px;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.status-side h2 em {
+  font-family: var(--font-serif); font-style: italic; font-weight: 400; color: var(--green-700);
+}
+.status-side p {
+  font-size: 13.5px; color: var(--ink-2); margin: 0;
+  line-height: 1.55;
+}
+
+/* Risk legend strip */
+.risk-legend {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0;
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.risk-legend .lg {
+  padding: 10px 12px;
+  border-right: 1px solid var(--hair);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--bg-surface-2);
+  color: var(--ink-3);
+}
+.risk-legend .lg:last-child { border-right: 0; }
+.risk-legend .lg.is-current {
+  background: white;
+  color: var(--ink);
+  position: relative;
+}
+.risk-legend .lg.is-current::after {
+  content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+}
+.risk-legend .lg.is-current.green::after { background: var(--green-500); }
+.risk-legend .lg.is-current.amber::after { background: var(--amber-500); }
+.risk-legend .lg.is-current.red::after { background: var(--red-500); }
+.risk-legend .lg .dot { width: 6px; height: 6px; border-radius: 50%; }
+.risk-legend .lg.green .dot { background: var(--green-500); }
+.risk-legend .lg.amber .dot { background: var(--amber-500); }
+.risk-legend .lg.red .dot { background: var(--red-500); }
+
+/* ---------- Transcript card ---------- */
+.transcript-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  margin-top: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  max-height: 460px;
+}
+.transcript-feed {
+  flex: 1; overflow: auto;
+  padding: 18px 22px 22px;
+  display: grid; gap: 16px;
+}
+.tt-turn {
+  display: grid;
+  grid-template-columns: 70px 1fr;
+  gap: 14px;
+  align-items: baseline;
+}
+.tt-turn .ts {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--ink-4);
+  letter-spacing: 0.06em;
+  padding-top: 4px;
+}
+.tt-turn .who {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+  padding: 1px 7px;
+  border-radius: 4px;
+}
+.tt-turn.asha .who { background: var(--green-50); color: var(--green-700); }
+.tt-turn.user .who { background: var(--bg-surface-2); color: var(--ink-2); }
+.tt-turn .text { font-size: 14.5px; color: var(--ink); line-height: 1.5; }
+.tt-turn.user .text { color: var(--ink-2); }
+.tt-turn.live .text::after {
+  content: "";
+  display: inline-block;
+  width: 2px; height: 1em;
+  background: var(--green-700);
+  vertical-align: text-bottom;
+  margin-left: 2px;
+  animation: blink 1s infinite step-end;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+.waveform-mini {
+  display: flex; align-items: center; gap: 3px;
+  height: 22px;
+}
+.waveform-mini span {
+  display: block; width: 3px; background: var(--green-500); border-radius: 3px;
+  animation: wbar 1.4s ease-in-out infinite;
+}
+@keyframes wbar {
+  0%, 100% { height: 4px; opacity: 0.4; }
+  50% { height: var(--peak, 14px); opacity: 1; }
+}
+body.state-idle .waveform-mini span,
+body.state-ended .waveform-mini span { animation: none; height: 4px; opacity: 0.3; background: var(--ink-3); }
+body.state-idle .tt-turn.live .text::after,
+body.state-ended .tt-turn.live .text::after { display: none; }
+
+/* ---------- Symptoms card ---------- */
+.sympt-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  overflow: hidden;
+}
+.sympt-list {
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+  max-height: 380px;
+  overflow: auto;
+}
+.sympt {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--bg-surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 10px;
+  align-items: start;
+}
+.sympt .sev {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  flex-shrink: 0;
+}
+.sympt.sev-1 .sev { background: var(--green-500); }
+.sympt.sev-2 .sev { background: var(--amber-500); }
+.sympt.sev-3 .sev { background: var(--red-500); }
+.sympt .body .lab {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.sympt .body .quote {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--ink-3);
+  line-height: 1.4;
+}
+.sympt .codes {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+  text-align: right;
+  white-space: nowrap;
+}
+.sympt .codes code {
+  display: block;
+  padding: 2px 6px;
+  background: white;
+  border: 1px solid var(--hair-2);
+  border-radius: 4px;
+  margin-bottom: 3px;
+  color: var(--ink-3);
+}
+.sympt-empty {
+  padding: 28px 24px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-4);
+}
+
+/* ---------- Classification card ---------- */
+.class-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--hair);
+  border-radius: 16px;
+  margin-top: 14px;
+  padding: 22px 22px 18px;
+  position: relative;
+  overflow: hidden;
+}
+body.state-ended .class-card.red {
+  background: linear-gradient(180deg, #FFFFFF 0%, #FBF1EF 100%);
+  border-color: rgba(200,71,59,0.2);
+}
+.class-card .pending {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.class-card h3 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  margin: 12px 0 6px;
+  display: flex; align-items: center; gap: 10px;
+}
+.class-card .summary {
+  font-size: 13.5px;
+  color: var(--ink-2);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+.class-card .stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin: 12px 0 16px;
+}
+.class-card .stats .kv {
+  background: var(--bg-surface-2);
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.class-card .stats .kv .k { color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase; font-size: 9.5px; }
+.class-card .stats .kv .v { font-size: 14px; color: var(--ink); font-weight: 500; margin-top: 2px; }
+.class-card .actions {
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.class-card .actions .btn { flex: 1; min-width: 0; justify-content: center; }
+
+body.state-live .class-card .when-complete { display: none; }
+body:not(.state-ended) .class-card .when-ended { display: none; }
+body.state-ended .class-card .when-live { display: none; }
+
+/* ---------- Call dock ---------- */
+.call-dock {
+  position: fixed;
+  left: 50%; bottom: 20px;
+  transform: translateX(-50%);
+  background: var(--bg-ink);
+  color: white;
+  border-radius: 999px;
+  padding: 10px 12px 10px 18px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: 0 24px 48px -12px rgba(20,36,28,0.5), 0 2px 0 rgba(255,255,255,0.04) inset;
+  z-index: 50;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+}
+.call-dock .timer {
+  color: #BFC8C2;
+  display: flex; align-items: center; gap: 8px;
+}
+.call-dock .timer::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(47,139,94,0.3);
+  animation: pulseDot 1.6s infinite;
+}
+body.state-idle .call-dock .timer::before,
+body.state-ended .call-dock .timer::before { animation: none; background: var(--ink-3); box-shadow: none; }
+body.state-ended .call-dock .timer::before { background: var(--red-500); }
+
+.call-dock .sep { width: 1px; height: 22px; background: rgba(255,255,255,0.1); }
+.call-dock button.ic {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  color: white;
+  display: grid; place-items: center;
+  transition: background .15s;
+}
+.call-dock button.ic:hover { background: rgba(255,255,255,0.15); }
+.call-dock button.ic.muted { background: var(--amber-500); color: var(--bg-ink); }
+
+.call-dock .end-btn,
+.call-dock .start-btn {
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-weight: 500;
+  font-size: 13px;
+  letter-spacing: 0;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.call-dock .end-btn { background: var(--red-700); color: white; }
+.call-dock .end-btn:hover { background: #7C1F18; }
+.call-dock .start-btn { background: var(--green-500); color: var(--bg-ink); font-weight: 600; }
+.call-dock .start-btn:hover { background: var(--green-300); }
+
+body.state-idle .call-dock .end-btn,
+body.state-ended .call-dock .end-btn { display: none; }
+body.state-live .call-dock .start-btn,
+body:not(.state-idle):not(.state-ended) .call-dock .start-btn { display: none; }
+body.state-idle .call-dock .ic.mute,
+body.state-ended .call-dock .ic.mute { display: none; }
+
+/* When idle, hide the active workspace and show the start-up prompt below */
+.idle-prompt {
+  display: none;
+  text-align: center;
+  padding: 60px 24px;
+}
+.idle-prompt h2 {
+  font-family: var(--font-display); font-weight: 500;
+  font-size: 32px; letter-spacing: -0.025em;
+  margin: 0 0 12px; text-wrap: balance;
+}
+.idle-prompt h2 em { font-family: var(--font-serif); font-style: italic; color: var(--green-700); font-weight: 400; }
+.idle-prompt p { color: var(--ink-2); max-width: 50ch; margin: 0 auto 28px; }
+
+body.state-idle .t-grid { display: none; }
+body.state-idle .idle-prompt { display: block; }
+
+</style>
+</head>
+<body class="triage state-live">
+
+<!-- Disclaimer overlay -->
+<div class="disclaimer-veil" id="disclaimer-veil" hidden>
+  <div class="disclaimer" role="dialog" aria-labelledby="disc-title">
+    <div class="eyebrow">Before we start</div>
+    <h1 id="disc-title">Asha is here to help — not to <em>replace</em> a clinician.</h1>
+    <p>I’ll ask you about your symptoms and give you a recommendation. A few things you should know first:</p>
+    <ul>
+      <li>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L5.5 11L12 4"/></svg>
+        I don’t diagnose. I help you decide whether to rest, see a doctor, or get emergency care.
+      </li>
+      <li>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L5.5 11L12 4"/></svg>
+        Your voice is processed in real time and not stored. The transcript is kept anonymously for safety review.
+      </li>
+      <li>
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7.5L5.5 11L12 4"/></svg>
+        If your situation is life-threatening — call emergency services right now. Don’t wait for me.
+      </li>
+    </ul>
+
+    <label class="check">
+      <input type="checkbox" id="disc-check"/>
+      <span>I understand Asha is a decision-support tool, not a substitute for a doctor. I agree to anonymous transcript review.</span>
+    </label>
+
+    <div class="actions">
+      <a href="index.html" class="btn btn-ghost">Cancel</a>
+      <button class="btn btn-primary" id="disc-start" disabled>
+        Start call with Asha
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="emergency-line">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4z"/><path d="M12 8v4M12 16h.01"/>
+      </svg>
+      Emergency? Call 112 immediately. <a href="tel:112" style="color: var(--red-700); text-decoration: underline; margin-left: 4px;">Tap to call</a>
+    </div>
+  </div>
+</div>
+
+<!-- Instrument strip -->
+<div class="instr-strip">
+  <span>PreCare · Triage</span>
+  <span class="live"><span id="live-text">In session</span></span>
+  <span>Asha v1.4</span>
+  <span>EU-WEST-1</span>
+  <span class="right">
+    <a href="index.html">← Back to PreCare</a>
+  </span>
+</div>
+
+<div class="triage-shell">
+
+  <!-- Page top -->
+  <div class="t-top">
+    <div class="brand" style="font-size: 18px;">
+      <div class="mk">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1.5V12.5M1.5 7H12.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>
+        Asha<small>Voice triage</small>
+      </div>
+    </div>
+
+    <div style="margin-left: auto;" class="session-meta">
+      <div>SESSION&nbsp;&nbsp;<strong id="sess-id">TRG-8841-K7</strong></div>
+      <div>STARTED&nbsp;&nbsp;<strong>14:08:32</strong></div>
+      <div>DURATION&nbsp;&nbsp;<strong id="duration">03:42</strong></div>
+    </div>
+  </div>
+
+  <!-- Idle-state hero (only visible when state-idle) -->
+  <div class="idle-prompt">
+    <h2>Take a moment, then <em>start when you’re ready.</em></h2>
+    <p>I’ll ask a few questions about how you’re feeling. You can speak naturally — most calls take under 5 minutes.</p>
+    <button class="btn btn-primary btn-lg" onclick="setState('live')">
+      Start call with Asha
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Workspace grid -->
+  <div class="t-grid">
+
+    <!-- Left column -->
+    <div>
+
+      <!-- Status / risk meter -->
+      <div class="status-card fadein">
+        <div class="status-head">
+          <div class="left">
+            <span class="call-state" id="call-state-text">Listening</span>
+            <span class="waveform-mini" aria-hidden="true">
+              <span style="--peak: 18px; animation-delay: 0s"></span>
+              <span style="--peak: 12px; animation-delay: 0.1s"></span>
+              <span style="--peak: 16px; animation-delay: 0.2s"></span>
+              <span style="--peak: 10px; animation-delay: 0.3s"></span>
+              <span style="--peak: 18px; animation-delay: 0.15s"></span>
+              <span style="--peak: 14px; animation-delay: 0.05s"></span>
+              <span style="--peak: 12px; animation-delay: 0.25s"></span>
+            </span>
+          </div>
+          <span class="eyebrow" style="margin: 0;">Risk · live</span>
+        </div>
+
+        <div class="status-grid">
+          <!-- Risk meter SVG -->
+          <div class="risk-meter">
+            <svg viewBox="0 0 240 240" aria-hidden="true">
+              <defs>
+                <linearGradient id="risk-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#2F8B5E"/>
+                  <stop offset="50%" stop-color="#D4A03C"/>
+                  <stop offset="100%" stop-color="#C8473B"/>
+                </linearGradient>
+              </defs>
+
+              <!-- Background track (3/4 arc) -->
+              <circle cx="120" cy="120" r="92" fill="none" stroke="#E8E5DC" stroke-width="14"
+                stroke-dasharray="433 578" stroke-dashoffset="0"
+                transform="rotate(135 120 120)" stroke-linecap="round"/>
+
+              <!-- Gradient fill arc -->
+              <circle id="risk-arc" cx="120" cy="120" r="92" fill="none" stroke="url(#risk-grad)" stroke-width="14"
+                stroke-dasharray="408 578" stroke-dashoffset="0"
+                transform="rotate(135 120 120)" stroke-linecap="round" opacity="0.95"/>
+
+              <!-- Tick marks -->
+              <g stroke="#97A199" stroke-width="1.2">
+                <line x1="35" y1="170" x2="42" y2="166"/>
+                <line x1="50" y1="62" x2="55" y2="69"/>
+                <line x1="120" y1="22" x2="120" y2="30"/>
+                <line x1="190" y1="62" x2="185" y2="69"/>
+                <line x1="205" y1="170" x2="198" y2="166"/>
+              </g>
+
+              <!-- Needle -->
+              <g id="needle" transform="rotate(45 120 120)" style="transform-origin: 120px 120px; transition: transform .8s cubic-bezier(.34,.13,.31,1.4);">
+                <line x1="120" y1="120" x2="120" y2="40" stroke="#14241C" stroke-width="2.5" stroke-linecap="round"/>
+                <circle cx="120" cy="120" r="8" fill="#14241C"/>
+                <circle cx="120" cy="120" r="3" fill="white"/>
+              </g>
+
+              <!-- Min / max labels -->
+              <text x="38" y="200" font-family="var(--font-mono)" font-size="10" fill="#97A199" letter-spacing="0.1em">LOW</text>
+              <text x="172" y="200" font-family="var(--font-mono)" font-size="10" fill="#97A199" letter-spacing="0.1em">HIGH</text>
+            </svg>
+            <div class="center">
+              <div>
+                <div class="val" id="risk-val">72</div>
+                <div class="lab">Risk index</div>
+                <div class="tier-label" id="tier-label">Emergency</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side text -->
+          <div class="status-side">
+            <div class="label">Current assessment</div>
+            <h2 id="assessment-title">Symptoms match <em>cardiac red-flag</em> criteria.</h2>
+            <p id="assessment-body">Chest pain radiating to left arm, with breathlessness on exertion. Asha is asking two more questions to confirm — but the recommendation is trending toward emergency care.</p>
+
+            <div class="risk-legend">
+              <div class="lg green"><span>Home</span><span class="dot"></span></div>
+              <div class="lg amber"><span>Clinic</span><span class="dot"></span></div>
+              <div class="lg red is-current"><span>Emergency</span><span class="dot"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Transcript -->
+      <div class="transcript-card fadein delay-1">
+        <div class="card-h">
+          <strong>Live transcript</strong>
+          <span id="transcript-meta">8 turns · auto-scroll</span>
+        </div>
+        <div class="transcript-feed" id="transcript">
+
+          <div class="tt-turn user">
+            <span class="ts">00:00</span>
+            <div>
+              <span class="who">Patient</span>
+              <div class="text">I've had a sharp pain in my chest for the last hour, and I feel a bit dizzy when I stand up.</div>
+            </div>
+          </div>
+
+          <div class="tt-turn asha">
+            <span class="ts">00:18</span>
+            <div>
+              <span class="who">Asha</span>
+              <div class="text">When you say <em>sharp pain</em> — does it feel more like a stab, a tight squeeze, or a dull pressure?</div>
+            </div>
+          </div>
+
+          <div class="tt-turn user">
+            <span class="ts">00:34</span>
+            <div>
+              <span class="who">Patient</span>
+              <div class="text">More like a tight squeeze. It got worse when I climbed the stairs.</div>
+            </div>
+          </div>
+
+          <div class="tt-turn asha">
+            <span class="ts">00:42</span>
+            <div>
+              <span class="who">Asha</span>
+              <div class="text">Got it. Does the pain travel anywhere else — like your arm, jaw, or back? And do you feel short of breath?</div>
+            </div>
+          </div>
+
+          <div class="tt-turn user">
+            <span class="ts">01:06</span>
+            <div>
+              <span class="who">Patient</span>
+              <div class="text">Yes, my left arm hurts too. And I am a bit short of breath.</div>
+            </div>
+          </div>
+
+          <div class="tt-turn asha live">
+            <span class="ts">01:14</span>
+            <div>
+              <span class="who">Asha · speaking</span>
+              <div class="text">Thank you. That helps me understand. Just one more — do you have any history of heart problems</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div>
+
+      <!-- Symptoms -->
+      <div class="sympt-card fadein delay-2">
+        <div class="card-h">
+          <strong>Symptoms detected</strong>
+          <span id="sympt-count">4 found</span>
+        </div>
+        <div class="sympt-list" id="sympt-list">
+
+          <div class="sympt sev-3">
+            <div class="sev">3</div>
+            <div class="body">
+              <div class="lab">Chest pain — squeezing</div>
+              <div class="quote">“like a tight squeeze… worse when I climbed the stairs”</div>
+            </div>
+            <div class="codes">
+              <code>R07.9</code>
+              <code>RF-CARD-07</code>
+            </div>
+          </div>
+
+          <div class="sympt sev-3">
+            <div class="sev">3</div>
+            <div class="body">
+              <div class="lab">Radiation to left arm</div>
+              <div class="quote">“my left arm hurts too”</div>
+            </div>
+            <div class="codes">
+              <code>RF-CARD-03</code>
+            </div>
+          </div>
+
+          <div class="sympt sev-2">
+            <div class="sev">2</div>
+            <div class="body">
+              <div class="lab">Dyspnoea on exertion</div>
+              <div class="quote">“I am a bit short of breath”</div>
+            </div>
+            <div class="codes">
+              <code>R06.0</code>
+            </div>
+          </div>
+
+          <div class="sympt sev-2">
+            <div class="sev">2</div>
+            <div class="body">
+              <div class="lab">Postural dizziness</div>
+              <div class="quote">“dizzy when I stand up”</div>
+            </div>
+            <div class="codes">
+              <code>R42</code>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Classification -->
+      <div class="class-card fadein delay-3 red">
+        <div class="card-h" style="padding: 0; border: 0; margin-bottom: 8px;">
+          <strong>Classification</strong>
+          <span class="when-live"><span class="spinner" style="display: inline-block; vertical-align: middle; margin-right: 6px;"></span>Building…</span>
+          <span class="when-ended">Final · 14:12:14</span>
+        </div>
+
+        <!-- Live state -->
+        <div class="when-live">
+          <p class="summary" style="margin-bottom: 14px;">
+            Trending strongly toward <strong style="color: var(--red-700)">Emergency</strong>.
+            Asha is confirming history before finalising — typically 30 – 60 seconds away.
+          </p>
+          <div class="stats">
+            <div class="kv"><div class="k">Trending tier</div><div class="v" style="color: var(--red-700);">Emergency</div></div>
+            <div class="kv"><div class="k">Confidence</div><div class="v">~87% · rising</div></div>
+            <div class="kv"><div class="k">Protocol</div><div class="v">ESI-1 · ACS</div></div>
+            <div class="kv"><div class="k">Red-flags</div><div class="v">2 triggered</div></div>
+          </div>
+        </div>
+
+        <!-- Ended state -->
+        <div class="when-ended">
+          <h3>
+            <span class="tier-pill red"><span class="d"></span>Emergency</span>
+            Call 112 now.
+          </h3>
+          <p class="summary">
+            Symptom pattern matches <strong>acute coronary syndrome</strong> red-flag protocol.
+            Do not drive yourself. Asha can dial emergency services and share the session log ahead.
+          </p>
+          <div class="stats">
+            <div class="kv"><div class="k">Tier</div><div class="v" style="color: var(--red-700);">Emergency</div></div>
+            <div class="kv"><div class="k">Confidence</div><div class="v">94%</div></div>
+            <div class="kv"><div class="k">Protocol</div><div class="v">ESI-1 · ACS</div></div>
+            <div class="kv"><div class="k">Duration</div><div class="v">3:42</div></div>
+          </div>
+          <div class="actions">
+            <a href="tel:112" class="btn btn-danger">⚠ Call 112</a>
+            <button class="btn btn-outline" onclick="downloadPdf()">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 1h6l3 3v9H3zM9 1v3h3M7 7v4M5 9l2 2 2-2"/>
+              </svg>
+              Download PDF summary
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Floating call dock -->
+<div class="call-dock">
+  <span class="timer" id="dock-timer">03:42</span>
+  <span class="sep"></span>
+
+  <button class="ic mute" id="btn-mute" aria-label="Mute" title="Mute mic">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M8 21h8"/>
+    </svg>
+  </button>
+
+  <button class="end-btn" onclick="setState('ended')">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="white" stroke="white" stroke-width="0">
+      <path d="M21 15.5c-1.25 0-2.45-.2-3.57-.57a1 1 0 0 0-1.02.24l-2.2 2.2a15.05 15.05 0 0 1-6.59-6.59l2.2-2.2a1 1 0 0 0 .24-1.02A11.36 11.36 0 0 1 9.5 4a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1A17 17 0 0 0 20 20a1 1 0 0 0 1-1v-3.5a1 1 0 0 0-1-1z" transform="scale(-1, 1) translate(-24, 0)"/>
+    </svg>
+    End call
+  </button>
+
+  <button class="start-btn" onclick="setState('live')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="7" cy="7" r="4"/></svg>
+    Start call
+  </button>
+</div>
+
+<!-- ============================================================
+     Tweaks (toolbar toggle) — flip between flow states
+     ============================================================ -->
+<script>
+(function() {
+  // Listener first
+  window.addEventListener('message', (e) => {
+    if (!e.data || typeof e.data !== 'object') return;
+    if (e.data.type === '__activate_edit_mode') openTweaks();
+    if (e.data.type === '__deactivate_edit_mode') closeTweaks();
+    if (e.data.type === '__edit_mode_state' && e.data.values) {
+      if (e.data.values.state) setState(e.data.values.state);
+    }
+  });
+
+  function postKey(key, val) {
+    window.parent.postMessage({ type: '__edit_mode_set_keys', edits: { [key]: val } }, '*');
+  }
+
+  // ===== State machine =====
+  window.setState = function(s) {
+    document.body.classList.remove('state-idle', 'state-live', 'state-ended');
+    document.body.classList.add('state-' + s);
+    const liveText = document.getElementById('live-text');
+    if (s === 'idle')   liveText.textContent = 'Not connected';
+    if (s === 'live')   liveText.textContent = 'In session';
+    if (s === 'ended')  liveText.textContent = 'Session complete';
+
+    const callStateText = document.getElementById('call-state-text');
+    if (callStateText) {
+      callStateText.textContent = s === 'idle' ? 'Idle' : s === 'ended' ? 'Call ended' : 'Listening';
+    }
+
+    // Disclaimer is only useful before a call
+    if (s === 'idle') showDisclaimer();
+    else hideDisclaimer();
+
+    postKey('state', s);
+  };
+
+  // Disclaimer
+  function showDisclaimer() {
+    document.getElementById('disclaimer-veil').hidden = false;
+  }
+  function hideDisclaimer() {
+    document.getElementById('disclaimer-veil').hidden = true;
+  }
+
+  const check = document.getElementById('disc-check');
+  const start = document.getElementById('disc-start');
+  check.addEventListener('change', () => { start.disabled = !check.checked; });
+  start.addEventListener('click', () => {
+    if (!check.checked) return;
+    setState('live');
+  });
+
+  window.downloadPdf = function() {
+    alert('PDF download triggered — would call /api/triage/pdf in the real app.');
+  };
+
+  // ===== Tweaks panel =====
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+    "state": "ended"
+  }/*EDITMODE-END*/;
+
+  let panel;
+  function buildPanel() {
+    if (panel) return panel;
+    panel = document.createElement('div');
+    panel.className = 'tweaks-panel';
+    panel.innerHTML = `
+      <style>
+        .tweaks-panel {
+          position: fixed; right: 16px; top: 60px; z-index: 999;
+          width: 240px; background: white; border: 1px solid var(--hair);
+          border-radius: 12px; box-shadow: 0 20px 40px -16px rgba(0,0,0,0.2);
+          font-family: var(--font-sans); font-size: 13px;
+        }
+        .tweaks-panel header {
+          padding: 10px 14px; border-bottom: 1px solid var(--hair);
+          display: flex; align-items: center; justify-content: space-between;
+          font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+          text-transform: uppercase; color: var(--ink-3);
+        }
+        .tweaks-panel header button { color: var(--ink-3); font-size: 14px; line-height: 1; }
+        .tweaks-panel .body { padding: 12px 14px; }
+        .tweaks-panel label { display: block; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 6px; }
+        .tweaks-panel .seg { display: flex; gap: 4px; padding: 3px; background: var(--bg-surface-2); border: 1px solid var(--hair); border-radius: 8px; }
+        .tweaks-panel .seg button {
+          flex: 1; padding: 6px; border-radius: 6px; font-size: 12px; color: var(--ink-3);
+        }
+        .tweaks-panel .seg button.active { background: var(--bg-ink); color: white; }
+      </style>
+      <header>
+        <span>Tweaks · /triage</span>
+        <button id="tw-close">×</button>
+      </header>
+      <div class="body">
+        <label>Call state</label>
+        <div class="seg">
+          <button data-state="idle">Idle</button>
+          <button data-state="live">Live</button>
+          <button data-state="ended">Ended</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(panel);
+
+    panel.querySelector('#tw-close').addEventListener('click', () => {
+      closeTweaks();
+      window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+    });
+    panel.querySelectorAll('.seg button').forEach(b => {
+      b.addEventListener('click', () => setState(b.dataset.state));
+    });
+
+    return panel;
+  }
+
+  function syncPanel() {
+    if (!panel) return;
+    panel.querySelectorAll('.seg button').forEach(b => {
+      b.classList.toggle('active', document.body.classList.contains('state-' + b.dataset.state));
+    });
+  }
+
+  function openTweaks() {
+    buildPanel();
+    panel.style.display = 'block';
+    syncPanel();
+  }
+  function closeTweaks() {
+    if (panel) panel.style.display = 'none';
+  }
+
+  // After state change, sync panel highlight
+  const _setState = window.setState;
+  window.setState = function(s) { _setState(s); syncPanel(); };
+
+  // Init from defaults
+  setState(TWEAK_DEFAULTS.state || 'live');
+
+  // Announce after listener is live
+  window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+
+  // Simulated timer
+  let t = 222; // 3:42
+  setInterval(() => {
+    if (!document.body.classList.contains('state-live')) return;
+    t += 1;
+    const mm = String(Math.floor(t / 60)).padStart(2, '0');
+    const ss = String(t % 60).padStart(2, '0');
+    document.getElementById('duration').textContent = mm + ':' + ss;
+    document.getElementById('dock-timer').textContent = mm + ':' + ss;
+  }, 1000);
+
+  // Mute toggle
+  document.getElementById('btn-mute').addEventListener('click', (e) => {
+    e.currentTarget.classList.toggle('muted');
+  });
+})();
+</script>
+</body>
+</html>

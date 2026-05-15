@@ -13,9 +13,9 @@ const CY = 50;
 const C = 2 * Math.PI * R;
 
 const TIERS = [
-  { key: "home" as const, color: "#22c55e", label: "Home" },
-  { key: "clinic" as const, color: "#f59e0b", label: "Clinic" },
-  { key: "er" as const, color: "#ef4444", label: "ER" },
+  { key: "home" as const, color: "#2f8b5e", label: "Home Care" },
+  { key: "clinic" as const, color: "#d4a03c", label: "Clinic Visit" },
+  { key: "er" as const, color: "#c8473b", label: "Emergency" },
 ] as const;
 
 export default function StatsDonut({ sessions }: Props) {
@@ -43,9 +43,9 @@ export default function StatsDonut({ sessions }: Props) {
   }, [counts, total]);
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <svg width="120" height="120" viewBox="0 0 100 100">
+    <div className="flex items-center gap-4">
+      <div className="relative shrink-0">
+        <svg width="110" height="110" viewBox="0 0 100 100">
           {total === 0 ? (
             <circle
               cx={CX}
@@ -53,7 +53,7 @@ export default function StatsDonut({ sessions }: Props) {
               r={R}
               fill="none"
               stroke="#e5e7eb"
-              strokeWidth="14"
+              strokeWidth="8"
             />
           ) : (
             segments.map((seg) =>
@@ -65,7 +65,7 @@ export default function StatsDonut({ sessions }: Props) {
                   r={R}
                   fill="none"
                   stroke={seg.color}
-                  strokeWidth="14"
+                  strokeWidth="8"
                   strokeDasharray={`${seg.len} ${C - seg.len}`}
                   transform={`rotate(${seg.rotation}, ${CX}, ${CY})`}
                 />
@@ -74,20 +74,24 @@ export default function StatsDonut({ sessions }: Props) {
           )}
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-2xl font-bold leading-none">{total}</span>
-          <span className="text-xs text-muted-foreground">total</span>
+          <span className="font-display text-lg font-medium leading-none">{total}</span>
+          <span className="text-[8px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
+            Sessions
+          </span>
         </div>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-3">
+      <div className="grid flex-1 gap-2">
         {TIERS.map((tier) => (
-          <div key={tier.key} className="flex items-center gap-1.5">
+          <div key={tier.key} className="flex items-center gap-2 text-sm text-[#3c4a43]">
             <div
-              className="w-2.5 h-2.5 rounded-full shrink-0"
+              className="h-2 w-2 shrink-0 rounded-sm"
               style={{ backgroundColor: tier.color }}
             />
-            <span className="text-xs text-muted-foreground">{tier.label}</span>
-            <span className="text-xs font-bold">{counts[tier.key]}</span>
+            <span>{tier.label}</span>
+            <span className="ml-auto text-xs font-medium text-[#14241c]" style={{ fontFamily: "var(--font-mono)" }}>
+              {total ? Math.round((counts[tier.key] / total) * 100) : 0}%
+            </span>
           </div>
         ))}
       </div>

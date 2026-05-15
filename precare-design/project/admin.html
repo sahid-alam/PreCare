@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sessions · PreCare Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Instrument+Serif:ital@0;1&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+<style>
+body.admin { background: var(--bg-app); }
+.admin-shell { max-width: 1440px; margin: 0 auto; }
+
+.admin-bar {
+  display: flex; align-items: center; gap: 16px;
+  padding: 14px 24px;
+  background: white;
+  border-bottom: 1px solid var(--hair);
+}
+.admin-bar h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+.admin-bar .crumbs {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 8px;
+}
+.admin-bar .crumbs strong { color: var(--ink); font-weight: 500; }
+.admin-bar .spacer { flex: 1; }
+
+.admin-bar .user {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px;
+}
+.admin-bar .user .av {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: var(--green-150);
+  color: var(--green-700);
+  display: grid; place-items: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+}
+.admin-bar .user strong { display: block; }
+.admin-bar .user small {
+  font-family: var(--font-mono); font-size: 10px;
+  color: var(--ink-3); letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.admin-content {
+  padding: 24px 24px 60px;
+}
+
+/* "Live feed" header */
+.feed-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.feed-head h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 30px;
+  letter-spacing: -0.025em;
+  margin: 0;
+  line-height: 1.1;
+}
+.feed-head h2 em {
+  font-family: var(--font-serif);
+  font-style: italic;
+  color: var(--green-700);
+  font-weight: 400;
+}
+.feed-head .live-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--green-150);
+  background: var(--green-50);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--green-700);
+  text-transform: uppercase;
+}
+.feed-head .live-badge .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green-500);
+  box-shadow: 0 0 0 3px rgba(47,139,94,0.2);
+  animation: pulseDot 1.4s infinite;
+}
+.feed-head .last-update {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.04em;
+}
+.feed-head .last-update strong { color: var(--ink); font-weight: 500; font-variant-numeric: tabular-nums; }
+.feed-head .pause-btn {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--hair-2);
+  border-radius: 7px;
+  text-transform: uppercase;
+}
+.feed-head .pause-btn:hover { background: white; color: var(--ink); }
+.feed-head .pause-btn.paused .dot { background: var(--amber-500); box-shadow: 0 0 0 3px rgba(212,160,60,0.22); animation: none; }
+
+/* KPI cards */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) { .kpi-row { grid-template-columns: 1fr 1fr; } }
+
+.kpi {
+  background: white;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  position: relative;
+  overflow: hidden;
+  min-height: 116px;
+}
+.kpi .lab {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  margin-bottom: 8px;
+}
+.kpi .val {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 32px;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  display: flex; align-items: baseline; gap: 6px;
+  white-space: nowrap;
+  line-height: 1;
+}
+.kpi .val .unit { font-size: 12px; color: var(--ink-3); font-family: var(--font-mono); font-weight: 400; letter-spacing: 0.02em; }
+.kpi .delta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-top: 8px;
+  color: var(--green-700);
+  letter-spacing: 0.02em;
+}
+.kpi .delta.down { color: var(--red-700); }
+.kpi.red { border-color: rgba(200,71,59,0.18); background: linear-gradient(180deg, #FFFFFF 0%, #FBF1EF 100%); }
+.kpi .spark { position: absolute; right: 14px; top: 14px; opacity: 0.55; }
+
+/* Chart row */
+.chart-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 900px) { .chart-row { grid-template-columns: 1fr; } }
+
+.card-chart {
+  background: white;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 16px 18px 12px;
+}
+.card-chart .head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.card-chart .head strong { color: var(--ink); font-weight: 500; }
+.card-chart .head .legend { display: flex; gap: 12px; text-transform: none; letter-spacing: 0; font-size: 11px; }
+.card-chart .head .legend span { display: inline-flex; align-items: center; gap: 6px; }
+.card-chart .head .legend i { width: 8px; height: 8px; border-radius: 2px; }
+
+.donut-card {
+  background: white;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  padding: 16px 18px 18px;
+  display: flex; flex-direction: column;
+}
+.donut-card .head {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--ink-3); margin-bottom: 14px;
+}
+.donut-card .donut-row {
+  display: flex; gap: 16px; align-items: center;
+}
+.donut-card ul {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: 8px; flex: 1; font-size: 12.5px;
+}
+.donut-card ul li { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+.donut-card ul li .sw { width: 8px; height: 8px; border-radius: 2px; }
+.donut-card ul li .val { margin-left: auto; font-family: var(--font-mono); color: var(--ink); font-weight: 500; }
+
+/* Sessions table */
+.card-table {
+  background: white;
+  border: 1px solid var(--hair);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.card-table .head-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--hair);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.card-table .head-row strong { color: var(--ink); font-weight: 500; }
+.card-table .filters { display: flex; gap: 6px; }
+.card-table .chip-sm {
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--hair-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.card-table .chip-sm:hover { background: var(--bg-surface-2); }
+.card-table .chip-sm.active {
+  background: var(--bg-ink);
+  color: white;
+  border-color: var(--bg-ink);
+}
+.card-table .chip-sm.active .count { background: rgba(255,255,255,0.15); color: white; }
+.card-table .chip-sm .count {
+  font-size: 9.5px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--hair);
+  color: var(--ink-2);
+}
+table.sessions {
+  width: 100%;
+  border-collapse: collapse;
+}
+table.sessions th, table.sessions td {
+  text-align: left;
+  padding: 11px 18px;
+  font-size: 13px;
+  border-bottom: 1px solid var(--hair);
+}
+table.sessions th {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  font-weight: 500;
+  background: var(--bg-surface-2);
+}
+table.sessions tr:last-child td { border-bottom: 0; }
+table.sessions tbody tr { cursor: pointer; transition: background .12s; }
+table.sessions tbody tr:hover { background: var(--bg-surface-2); }
+table.sessions .id { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink); }
+table.sessions .when { font-family: var(--font-mono); font-size: 11px; color: var(--ink-3); }
+table.sessions .when strong { color: var(--ink); font-weight: 500; display: block; }
+table.sessions .flag-row { display: flex; gap: 4px; }
+table.sessions .flag {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--red-50);
+  color: var(--red-700);
+  letter-spacing: 0.04em;
+}
+table.sessions tr.new-row {
+  animation: rowIn 0.6s ease;
+}
+@keyframes rowIn {
+  from { background: var(--green-50); }
+  to { background: transparent; }
+}
+
+table.sessions .arrow-cell {
+  width: 32px;
+  color: var(--ink-4);
+  text-align: right;
+}
+table.sessions tbody tr:hover .arrow-cell { color: var(--green-700); }
+
+/* Empty state — not used here but tidy */
+.t-empty { padding: 36px; text-align: center; color: var(--ink-4); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; }
+
+</style>
+</head>
+<body class="admin">
+
+<!-- Instrument strip -->
+<div class="instr-strip">
+  <span>PreCare · Admin</span>
+  <span class="live">Realtime feed connected</span>
+  <span>Asha v1.4</span>
+  <span>EU-WEST-1</span>
+  <span class="right">
+    <a href="index.html">View patient site →</a>
+  </span>
+</div>
+
+<div class="admin-shell">
+
+  <!-- Top bar -->
+  <div class="admin-bar">
+    <a href="admin.html" class="brand" style="font-size: 16px;">
+      <div class="mk">
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M7 1.5V12.5M1.5 7H12.5" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div>PreCare<small>Admin</small></div>
+    </a>
+
+    <span class="crumbs">/ <strong>Sessions</strong></span>
+
+    <span class="spacer"></span>
+
+    <div class="user">
+      <div class="av">SI</div>
+      <div>
+        <strong>Dr. S. Iyer</strong>
+        <small>Triage Lead</small>
+      </div>
+    </div>
+    <a href="admin-login.html" class="btn btn-outline btn-sm">Sign out</a>
+  </div>
+
+  <div class="admin-content">
+
+    <div class="feed-head">
+      <h2>Sessions <em>overview.</em></h2>
+      <span class="live-badge"><span class="dot"></span>Live</span>
+      <span class="last-update">Last update <strong id="last-update">2s ago</strong></span>
+      <button class="pause-btn" id="pause-btn">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect x="2" y="2" width="2" height="6" rx="0.5"/><rect x="6" y="2" width="2" height="6" rx="0.5"/></svg>
+        Pause stream
+      </button>
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-row">
+      <div class="kpi">
+        <div class="lab">Sessions today</div>
+        <div class="val" id="kpi-sessions">1,248</div>
+        <div class="delta">↑ 12% vs yesterday</div>
+        <svg class="spark" width="56" height="22" viewBox="0 0 56 22"><polyline points="0,18 6,16 12,17 18,12 24,13 30,9 36,10 42,6 48,7 56,3" fill="none" stroke="#1E6A47" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg>
+      </div>
+      <div class="kpi red">
+        <div class="lab">Red-flag escalations</div>
+        <div class="val" id="kpi-red">37 <span class="unit">/ 3.0%</span></div>
+        <div class="delta down">↑ 4 since last hour</div>
+        <svg class="spark" width="56" height="22" viewBox="0 0 56 22"><polyline points="0,16 6,14 12,17 18,11 24,8 30,12 36,10 42,7 48,5 56,9" fill="none" stroke="#C8473B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="lab">Avg duration</div>
+        <div class="val">4:12 <span class="unit">min</span></div>
+        <div class="delta">↓ 22s vs avg</div>
+        <svg class="spark" width="56" height="22" viewBox="0 0 56 22"><polyline points="0,12 6,10 12,11 18,13 24,12 30,14 36,13 42,15 48,14 56,16" fill="none" stroke="#3C4A43" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg>
+      </div>
+      <div class="kpi">
+        <div class="lab">Sent to ER</div>
+        <div class="val">14 <span class="unit">/ 1.1%</span></div>
+        <div class="delta">On expected curve</div>
+        <svg class="spark" width="56" height="22" viewBox="0 0 56 22"><polyline points="0,16 6,14 12,15 18,13 24,12 30,14 36,11 42,12 48,10 56,11" fill="none" stroke="#1E6A47" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/></svg>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="chart-row">
+      <div class="card-chart">
+        <div class="head">
+          <strong>Volume — last 24 hours</strong>
+          <div class="legend">
+            <span><i style="background:#1E6A47"></i>Sessions</span>
+            <span><i style="background:#C8473B"></i>Red-flags</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 720 180" style="width: 100%; height: 200px;">
+          <defs>
+            <linearGradient id="vg" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#1E6A47" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="#1E6A47" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="24" x2="696" y1="45" y2="45" stroke="#E8E5DC" stroke-dasharray="2 3"/>
+          <line x1="24" x2="696" y1="90" y2="90" stroke="#E8E5DC" stroke-dasharray="2 3"/>
+          <line x1="24" x2="696" y1="135" y2="135" stroke="#E8E5DC" stroke-dasharray="2 3"/>
+          <path id="vol-area" d="M 24,156 L 24,140 L 80,144 L 136,152 L 192,128 L 248,82 L 304,52 L 360,58 L 416,38 L 472,28 L 528,18 L 584,40 L 640,66 L 696,90 L 696,156 Z" fill="url(#vg)"/>
+          <path d="M 24,140 L 80,144 L 136,152 L 192,128 L 248,82 L 304,52 L 360,58 L 416,38 L 472,28 L 528,18 L 584,40 L 640,66 L 696,90" fill="none" stroke="#1E6A47" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M 24,153 L 80,154 L 136,150 L 192,148 L 248,140 L 304,134 L 360,138 L 416,130 L 472,124 L 528,114 L 584,124 L 640,138 L 696,146" fill="none" stroke="#C8473B" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="528" cy="114" r="3" fill="#C8473B"/>
+          <circle cx="472" cy="124" r="3" fill="#C8473B"/>
+          <g font-family="Geist Mono" font-size="9" fill="#97A199">
+            <text x="24" y="174" text-anchor="middle">00h</text>
+            <text x="136" y="174" text-anchor="middle">04h</text>
+            <text x="248" y="174" text-anchor="middle">08h</text>
+            <text x="360" y="174" text-anchor="middle">12h</text>
+            <text x="472" y="174" text-anchor="middle">16h</text>
+            <text x="584" y="174" text-anchor="middle">20h</text>
+            <text x="696" y="174" text-anchor="middle">24h</text>
+          </g>
+        </svg>
+      </div>
+
+      <div class="donut-card">
+        <div class="head">Outcomes — today</div>
+        <div class="donut-row">
+          <svg width="110" height="110" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#F3F1EA" stroke-width="8"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#2F8B5E" stroke-width="8" stroke-dasharray="148 240" stroke-dashoffset="0" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#D4A03C" stroke-width="8" stroke-dasharray="84 240" stroke-dashoffset="-148" transform="rotate(-90 50 50)"/>
+            <circle cx="50" cy="50" r="38" fill="none" stroke="#C8473B" stroke-width="8" stroke-dasharray="7 240" stroke-dashoffset="-232" transform="rotate(-90 50 50)"/>
+            <text x="50" y="48" text-anchor="middle" font-family="Bricolage Grotesque" font-size="18" font-weight="500" fill="#14241C">1,248</text>
+            <text x="50" y="62" text-anchor="middle" font-family="Geist Mono" font-size="8" fill="#6F7A73" letter-spacing="0.1em">SESSIONS</text>
+          </svg>
+          <ul>
+            <li><span class="sw" style="background:#2F8B5E"></span>Home Care<span class="val">62%</span></li>
+            <li><span class="sw" style="background:#D4A03C"></span>Clinic Visit<span class="val">35%</span></li>
+            <li><span class="sw" style="background:#C8473B"></span>Emergency<span class="val">3%</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sessions table -->
+    <div class="card-table">
+      <div class="head-row">
+        <strong>Recent sessions</strong>
+        <div class="filters">
+          <button class="chip-sm active" data-filter="all">All <span class="count">1,248</span></button>
+          <button class="chip-sm" data-filter="live">Live <span class="count">8</span></button>
+          <button class="chip-sm" data-filter="red">Emergency <span class="count">37</span></button>
+          <button class="chip-sm" data-filter="amber">Clinic <span class="count">437</span></button>
+          <button class="chip-sm" data-filter="green">Home <span class="count">766</span></button>
+        </div>
+      </div>
+      <table class="sessions">
+        <thead>
+          <tr>
+            <th>Session ID</th>
+            <th>Started</th>
+            <th>Patient</th>
+            <th>Reported symptoms</th>
+            <th>Duration</th>
+            <th>Tier</th>
+            <th>Flags</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="sessions-tbody">
+          <!-- rows injected by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const SESSIONS = [
+  { id: 'TRG-8841-K7', when: '2 min ago', dur: '3:42', age: '54M', sym: 'Chest pain, dizziness',     tier: 'red',   flags: ['CARD','RESP'], status: 'completed' },
+  { id: 'TRG-8839-P2', when: 'now',       dur: 'live',  age: '32F', sym: 'Sore throat, mild fever',  tier: 'live',  flags: [],              status: 'live' },
+  { id: 'TRG-8838-X1', when: '12 min',    dur: '4:18',  age: '68M', sym: 'Severe headache, nausea',  tier: 'red',   flags: ['NEUR'],        status: 'completed' },
+  { id: 'TRG-8837-J4', when: '18 min',    dur: '2:51',  age: '41F', sym: 'Cough 5 days, fatigue',    tier: 'amber', flags: [],              status: 'completed' },
+  { id: 'TRG-8836-Q9', when: '24 min',    dur: '3:09',  age: '27M', sym: 'Ankle sprain after fall',  tier: 'amber', flags: [],              status: 'completed' },
+  { id: 'TRG-8835-B2', when: '31 min',    dur: '1:48',  age: '58F', sym: 'Mild stomach upset',       tier: 'green', flags: [],              status: 'completed' },
+  { id: 'TRG-8834-V5', when: '38 min',    dur: '5:02',  age: '45M', sym: 'Difficulty breathing',     tier: 'red',   flags: ['RESP'],        status: 'completed' },
+  { id: 'TRG-8833-L7', when: '46 min',    dur: '2:14',  age: '34F', sym: 'Sinus pressure',           tier: 'green', flags: [],              status: 'completed' },
+];
+
+let filter = 'all';
+let paused = false;
+let lastUpdateSec = 2;
+
+function renderTable() {
+  const tbody = document.getElementById('sessions-tbody');
+  const rows = SESSIONS.filter(s => filter === 'all' || s.tier === filter);
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8"><div class="t-empty">No sessions match this filter.</div></td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => `
+    <tr onclick="window.location.href='admin-session.html?id=${r.id}'">
+      <td><span class="id">${r.id}</span></td>
+      <td><span class="when"><strong>${r.when}</strong>${r.status === 'live' ? 'in progress' : 'completed'}</span></td>
+      <td>${r.age} <span style="color: var(--ink-4)">· anon</span></td>
+      <td>${r.sym}</td>
+      <td style="font-family: var(--font-mono); color: ${r.dur === 'live' ? 'var(--green-700)' : 'var(--ink-2)'};">${r.dur}</td>
+      <td><span class="tier-pill ${r.tier}"><span class="d"></span>${r.tier === 'live' ? 'Live' : r.tier === 'red' ? 'Emergency' : r.tier === 'amber' ? 'Clinic' : 'Home'}</span></td>
+      <td><div class="flag-row">${r.flags.map(f => '<span class="flag">' + f + '</span>').join('')}</div></td>
+      <td class="arrow-cell">→</td>
+    </tr>
+  `).join('');
+}
+
+renderTable();
+
+document.querySelectorAll('.chip-sm').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.chip-sm').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    filter = b.dataset.filter;
+    renderTable();
+  });
+});
+
+// Pause stream
+document.getElementById('pause-btn').addEventListener('click', (e) => {
+  paused = !paused;
+  const btn = e.currentTarget;
+  btn.classList.toggle('paused', paused);
+  btn.innerHTML = paused
+    ? '<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><polygon points="2,1 9,5 2,9"/></svg> Resume stream'
+    : '<svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor"><rect x="2" y="2" width="2" height="6" rx="0.5"/><rect x="6" y="2" width="2" height="6" rx="0.5"/></svg> Pause stream';
+});
+
+// Simulated realtime: tick "last update" and KPI numbers
+setInterval(() => {
+  if (paused) return;
+  lastUpdateSec += 1;
+  if (lastUpdateSec > 12) {
+    lastUpdateSec = 1;
+    // bump a KPI value to feel alive
+    const s = document.getElementById('kpi-sessions');
+    s.textContent = (parseInt(s.textContent.replace(/,/g, '')) + 1).toLocaleString();
+  }
+  document.getElementById('last-update').textContent = lastUpdateSec + 's ago';
+}, 1000);
+</script>
+</body>
+</html>

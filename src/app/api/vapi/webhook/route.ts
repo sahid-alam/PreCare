@@ -14,19 +14,30 @@ function missingSession(): Response {
   return Response.json({ ok: false, reason: "no session id" });
 }
 
+// Check multiple paths Vapi uses to forward variable values
 function extractSessionId(message: Record<string, unknown>): string | null {
   const call = message["call"] as Record<string, unknown> | undefined;
-  const overrides = call?.["assistantOverrides"] as
-    | Record<string, unknown>
-    | undefined;
-  const vars = overrides?.["variableValues"] as
-    | Record<string, unknown>
-    | undefined;
-  const id = vars?.["sessionId"];
-  return typeof id === "string" && id.length > 0 ? id : null;
+
+  // Path 1 (primary): variableValues set via vapi.start() assistantOverrides
+  const overrides = call?.["assistantOverrides"] as Record<string, unknown> | undefined;
+  const vars = overrides?.["variableValues"] as Record<string, unknown> | undefined;
+  const id1 = vars?.["sessionId"];
+  if (typeof id1 === "string" && id1.length > 0) return id1;
+
+  // Path 2: call.metadata (some Vapi versions / tool-call events)
+  const callMeta = call?.["metadata"] as Record<string, unknown> | undefined;
+  const id2 = callMeta?.["sessionId"];
+  if (typeof id2 === "string" && id2.length > 0) return id2;
+
+  // Path 3: top-level message metadata
+  const msgMeta = message["metadata"] as Record<string, unknown> | undefined;
+  const id3 = msgMeta?.["sessionId"];
+  if (typeof id3 === "string" && id3.length > 0) return id3;
+
+  return null;
 }
 
-// ── Tool-call business logic (shared between function-call + tool-calls) ──────
+// ── Tool-call business logic ──────────────────────────────────────────────────
 
 async function handleLogSymptom(
   params: Record<string, unknown>,
@@ -85,18 +96,21 @@ async function handleSubmitTriage(
       ? (params["recommended_actions"] as string[])
       : null;
 
-  await db.from("sessions").update({
-    final_tier: finalTier,
-    chief_complaint:
-      typeof params["chief_complaint"] === "string"
-        ? params["chief_complaint"]
-        : null,
-    reasoning:
-      typeof params["reasoning"] === "string" ? params["reasoning"] : null,
-    recommended_actions: recommendedActions,
-    red_flag_triggered: shouldOverride,
-    red_flag_categories: matched.length > 0 ? matched : null,
-  }).eq("id", sessionId);
+  await db
+    .from("sessions")
+    .update({
+      final_tier: finalTier,
+      chief_complaint:
+        typeof params["chief_complaint"] === "string"
+          ? params["chief_complaint"]
+          : null,
+      reasoning:
+        typeof params["reasoning"] === "string" ? params["reasoning"] : null,
+      recommended_actions: recommendedActions,
+      red_flag_triggered: shouldOverride,
+      red_flag_categories: matched.length > 0 ? matched : null,
+    })
+    .eq("id", sessionId);
 
   if (shouldOverride) {
     await db.from("audit_log").insert({
@@ -135,7 +149,44 @@ async function handleTranscript(
   return ok();
 }
 
-// Handles old-style "function-call" event (Vapi legacy + still in serverMessages)
+// Vapi sends conversation-update (not transcript) — full history on every turn.
+// Sync strategy: delete existing rows and reinsert from the latest snapshot.
+async function handleConversationUpdate(
+  message: Record<string, unknown>,
+  sessionId: string | null
+): Promise<Response> {
+  if (!sessionId) return missingSession();
+
+  const conversation = message["conversation"] as
+    | Array<{ role?: string; message?: string; content?: string }>
+    | undefined;
+
+  if (!Array.isArray(conversation) || conversation.length === 0) return ok();
+
+  const turns = conversation.filter(
+    (t) => t.role === "user" || t.role === "bot" || t.role === "assistant"
+  );
+  if (turns.length === 0) return ok();
+
+  const db = getServiceClient();
+
+  // Delete then reinsert — idempotent on retries; latest snapshot wins
+  await db.from("transcripts").delete().eq("session_id", sessionId);
+  await db.from("transcripts").insert(
+    turns.map((turn) => ({
+      session_id: sessionId,
+      role:
+        turn.role === "bot" || turn.role === "assistant"
+          ? ("assistant" as const)
+          : ("user" as const),
+      content: turn.message ?? turn.content ?? "",
+    }))
+  );
+
+  return ok();
+}
+
+// Handles legacy "function-call" events
 async function handleFunctionCall(
   message: Record<string, unknown>,
   sessionId: string | null
@@ -163,38 +214,66 @@ async function handleFunctionCall(
   return ok();
 }
 
-// Handles new-style "tool-calls" event
+// Handles new-style "tool-calls" events (OpenAI format).
+// function.arguments is a JSON-encoded string.
 async function handleToolCalls(
   message: Record<string, unknown>,
   sessionId: string | null
 ): Promise<Response> {
   const toolList = message["toolCallList"] as
-    | Array<{ id?: string; name?: string; parameters?: Record<string, unknown> }>
+    | Array<{
+        id?: string;
+        type?: string;
+        function?: { name?: string; arguments?: string };
+        name?: string;
+        parameters?: Record<string, unknown>;
+      }>
     | undefined;
 
   const toolCall = toolList?.[0];
   if (!toolCall) return ok();
 
-  const name = toolCall.name ?? "";
-  const params = toolCall.parameters ?? {};
+  const name: string = toolCall.function?.name ?? toolCall.name ?? "";
   const toolCallId = toolCall.id ?? "";
 
-  let result: string;
-
-  if (name === "log_symptom") {
-    if (!sessionId) return missingSession();
-    await handleLogSymptom(params, sessionId);
-    result = "ok";
-  } else if (name === "submit_triage_assessment") {
-    if (!sessionId) return missingSession();
-    result = await handleSubmitTriage(params, sessionId);
-  } else {
-    return ok();
+  let params: Record<string, unknown> = {};
+  const rawArgs = toolCall.function?.arguments;
+  if (typeof rawArgs === "string" && rawArgs.trim()) {
+    try {
+      params = JSON.parse(rawArgs) as Record<string, unknown>;
+    } catch {
+      console.warn("[webhook:tool-calls] bad arguments JSON:", rawArgs.slice(0, 200));
+    }
+  } else if (toolCall.parameters && typeof toolCall.parameters === "object") {
+    params = toolCall.parameters;
   }
 
-  return Response.json({
-    results: [{ name, toolCallId, result }],
-  });
+  console.log(`[webhook:tool-calls] name=${name} id=${toolCallId} sid=${sessionId ?? "null"}`);
+
+  // Always respond in Vapi's expected results format — even on error — so the
+  // assistant doesn't hang on "No result returned".
+  if (name === "log_symptom") {
+    if (!sessionId) {
+      console.warn("[webhook:tool-calls] no sessionId for log_symptom");
+      return Response.json({ results: [{ toolCallId, name, result: "ok" }] });
+    }
+    await handleLogSymptom(params, sessionId);
+    return Response.json({ results: [{ toolCallId, name, result: "ok" }] });
+  }
+
+  if (name === "submit_triage_assessment") {
+    if (!sessionId) {
+      console.warn("[webhook:tool-calls] no sessionId for submit_triage_assessment");
+      // Return the LLM's own tier so it can continue the call
+      const fallbackTier = (params["tier"] as string | undefined) ?? "home";
+      return Response.json({ results: [{ toolCallId, name, result: fallbackTier }] });
+    }
+    const finalTier = await handleSubmitTriage(params, sessionId);
+    return Response.json({ results: [{ toolCallId, name, result: finalTier }] });
+  }
+
+  console.log(`[webhook:tool-calls] unknown tool "${name}" — ignoring`);
+  return ok();
 }
 
 async function handleStatusUpdate(
@@ -204,10 +283,12 @@ async function handleStatusUpdate(
   if (!sessionId) return missingSession();
 
   const vapiStatus = message["status"] as string | undefined;
-  // Map Vapi statuses → our enum: in-progress → active, ended → complete, else active
   const dbStatus =
-    vapiStatus === "ended" ? "complete" :
-    vapiStatus === "in-progress" ? "active" : "active";
+    vapiStatus === "ended"
+      ? "complete"
+      : vapiStatus === "in-progress"
+      ? "active"
+      : "active";
 
   const db = getServiceClient();
   await db.from("sessions").update({ status: dbStatus }).eq("id", sessionId);
@@ -226,8 +307,37 @@ async function handleEndOfCall(
       ? message["durationSeconds"]
       : null;
 
+  // Extract conversation turns from artifact.messages or top-level messages
+  const artifact = message["artifact"] as Record<string, unknown> | undefined;
+  const rawMessages =
+    (artifact?.["messages"] as unknown[] | undefined) ??
+    (message["messages"] as unknown[] | undefined) ??
+    [];
+
+  type VapiMsg = { role?: string; message?: string; content?: string };
+  const turns = (rawMessages as VapiMsg[]).filter(
+    (t) => t.role === "user" || t.role === "bot" || t.role === "assistant"
+  );
+
   const db = getServiceClient();
-  // Idempotent: only update if not already complete
+
+  // Persist transcript: overwrite any partial conversation-update rows with the
+  // authoritative full transcript from the end-of-call report
+  if (turns.length > 0) {
+    await db.from("transcripts").delete().eq("session_id", sessionId);
+    await db.from("transcripts").insert(
+      turns.map((turn) => ({
+        session_id: sessionId,
+        role:
+          turn.role === "bot" || turn.role === "assistant"
+            ? ("assistant" as const)
+            : ("user" as const),
+        content: turn.message ?? turn.content ?? "",
+      }))
+    );
+    console.log(`[webhook:end-of-call] wrote ${turns.length} transcript rows for ${sessionId}`);
+  }
+
   await db
     .from("sessions")
     .update({
@@ -246,15 +356,11 @@ async function handleEndOfCall(
 export async function POST(request: Request): Promise<Response> {
   const rawBody = await request.text();
 
-  // Signature verification — skipped when no secret is configured
   const secret = process.env["VAPI_WEBHOOK_SECRET"] ?? "";
   if (secret) {
     const sig = request.headers.get("x-vapi-signature");
     if (!verifyVapiSignature(rawBody, sig, secret)) {
-      return Response.json(
-        { ok: false, reason: "invalid signature" },
-        { status: 401 }
-      );
+      return Response.json({ ok: false, reason: "invalid signature" }, { status: 401 });
     }
   }
 
@@ -274,9 +380,13 @@ export async function POST(request: Request): Promise<Response> {
   const type = message["type"] as string | undefined;
   const sessionId = extractSessionId(message);
 
+  console.log(`[webhook] type=${type} sid=${sessionId ?? "null"}`);
+
   switch (type) {
     case "transcript":
       return handleTranscript(message, sessionId);
+    case "conversation-update":
+      return handleConversationUpdate(message, sessionId);
     case "function-call":
       return handleFunctionCall(message, sessionId);
     case "tool-calls":

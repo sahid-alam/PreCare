@@ -11,7 +11,9 @@ export default function ActiveCallsBanner({ sessions }: Props) {
 
   if (count === 0) {
     return (
-      <p className="text-sm text-muted-foreground">No active calls right now.</p>
+      <span className="text-[11px] normal-case text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)" }}>
+        no active calls
+      </span>
     );
   }
 
@@ -19,9 +21,9 @@ export default function ActiveCallsBanner({ sessions }: Props) {
     <div className="flex items-center gap-2">
       <span className="relative flex h-2.5 w-2.5 shrink-0">
         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
-        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#2f8b5e]" />
       </span>
-      <span className="text-sm font-medium text-green-700">
+      <span className="text-[11px] normal-case text-[#1e6a47]" style={{ fontFamily: "var(--font-mono)" }}>
         {count} active call{count !== 1 ? "s" : ""}
       </span>
     </div>

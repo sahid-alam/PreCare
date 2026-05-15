@@ -1,6 +1,5 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Symptom } from "@/lib/types";
 
@@ -8,10 +7,10 @@ interface Props {
   symptoms: Symptom[];
 }
 
-const severityStyles: Record<string, string> = {
-  mild: "bg-green-100 text-green-800 border-green-200",
-  moderate: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  severe: "bg-red-100 text-red-800 border-red-200",
+const severityStyles: Record<string, { dot: string; score: string }> = {
+  mild: { dot: "bg-[#2f8b5e]", score: "1" },
+  moderate: { dot: "bg-[#d4a03c]", score: "2" },
+  severe: { dot: "bg-[#c8473b]", score: "3" },
 };
 
 function formatTime(iso: string): string {
@@ -22,46 +21,36 @@ function formatTime(iso: string): string {
 }
 
 export default function SymptomsPanel({ symptoms }: Props) {
-  if (symptoms.length === 0) {
-    return (
-      <p className="text-sm text-muted-foreground">
-        No symptoms identified yet.
-      </p>
-    );
-  }
-
   return (
-    <div className="space-y-3">
+    <div className="pc-card overflow-hidden">
+      <div className="pc-card-head">
+        <strong className="font-medium text-[#14241c]">Symptoms extracted</strong>
+        <span>{symptoms.length} found</span>
+      </div>
+      <div className="grid gap-0 p-4">
+      {symptoms.length === 0 && (
+        <p className="py-4 text-sm text-[#6f7a73]">No symptoms identified yet.</p>
+      )}
       {symptoms.map((s) => (
-        <div key={s.id} className="flex items-start justify-between gap-2">
-          <div className="space-y-0.5 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium capitalize">{s.name}</span>
-              {s.severity && (
-                <Badge
-                  variant="outline"
-                  className={cn(
-                    "text-xs capitalize px-2 py-0",
-                    severityStyles[s.severity] ??
-                      "bg-gray-100 text-gray-700 border-gray-200"
-                  )}
-                >
-                  {s.severity}
-                </Badge>
-              )}
-            </div>
+        <div key={s.id} className="grid grid-cols-[28px_1fr_auto] gap-3 border-b border-dashed border-[#e8e5dc] py-3 text-sm last:border-b-0">
+          <div className={cn("grid h-6 w-6 place-items-center rounded-full text-[10px] font-medium text-white", severityStyles[s.severity ?? ""]?.dot ?? "bg-[#97a199]")} style={{ fontFamily: "var(--font-mono)" }}>
+            {severityStyles[s.severity ?? ""]?.score ?? "·"}
+          </div>
+          <div className="min-w-0">
+            <div className="font-medium capitalize text-[#14241c]">{s.name}</div>
             {s.duration && (
-              <p className="text-xs text-muted-foreground">{s.duration}</p>
+              <p className="text-xs text-[#6f7a73]">{s.duration}</p>
             )}
             {s.notes && (
-              <p className="text-xs text-muted-foreground italic">{s.notes}</p>
+              <p className="font-serif-display text-xs italic text-[#6f7a73]">{s.notes}</p>
             )}
           </div>
-          <span className="text-xs text-muted-foreground shrink-0">
+          <span className="shrink-0 text-[10px] text-[#97a199]" style={{ fontFamily: "var(--font-mono)" }}>
             {formatTime(s.created_at)}
           </span>
         </div>
       ))}
+      </div>
     </div>
   );
 }

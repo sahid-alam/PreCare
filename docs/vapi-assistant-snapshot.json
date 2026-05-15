@@ -8,7 +8,7 @@
     "provider": "11labs"
   },
   "createdAt": "2026-05-14T16: 02: 27.734Z",
-  "updatedAt": "2026-05-14T20: 44: 31.437Z",
+  "updatedAt": "2026-05-15T06: 41: 57.145Z",
   "model": {
     "model": "gpt-5.2-chat-latest",
     "toolIds": [
@@ -65,7 +65,8 @@
     "transfer-destination-request",
     "handoff-destination-request",
     "user-interrupted",
-    "assistant.started"
+    "assistant.started",
+    "transcript"
   ],
   "endCallPhrases": [
     "\"goodbye\"",
@@ -81,6 +82,10 @@
   "startSpeakingPlan": {
     "waitSeconds": 0.4,
     "smartEndpointingEnabled": "livekit"
+  },
+  "server": {
+    "url": "https://precare-lyart.vercel.app/api/vapi/webhook",
+    "timeoutSeconds": 20
   },
   "compliancePlan": {
     "hipaaEnabled": false,
