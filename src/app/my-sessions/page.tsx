@@ -459,33 +459,41 @@ export default function MySessionsPage() {
             ) : (
               <ul className="space-y-3">
                 {sessions.map((s) => (
-                  <li key={s.id} className="rounded-xl border border-[#e8e5dc] bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8b5ad]" />
-                        <div>
-                          <p className="text-sm font-medium text-[#14241c]">
-                            {formatDate(s.started_at)}{" "}
-                            <span className="font-normal text-[#6f7a73]">at {formatTime(s.started_at)}</span>
-                          </p>
-                          {s.chief_complaint && <p className="mt-0.5 text-xs text-[#3c4a43]">{s.chief_complaint}</p>}
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="text-[10px] uppercase tracking-wide text-[#a8b5ad]" style={{ fontFamily: "var(--font-mono)" }}>{s.status}</span>
-                            {s.duration_seconds && (
-                              <><span className="text-[#d3e5d9]">·</span><span className="text-[10px] text-[#a8b5ad]">{formatDuration(s.duration_seconds)}</span></>
-                            )}
+                  <li key={s.id}>
+                    <Link
+                      href={`/my-sessions/${s.id}`}
+                      className="group block rounded-xl border border-[#e8e5dc] bg-white p-4 transition-all hover:border-[#c5d9ca] hover:shadow-[0_4px_16px_-6px_rgba(20,36,28,0.1)]"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8b5ad]" />
+                          <div>
+                            <p className="text-sm font-medium text-[#14241c]">
+                              {formatDate(s.started_at)}{" "}
+                              <span className="font-normal text-[#6f7a73]">at {formatTime(s.started_at)}</span>
+                            </p>
+                            {s.chief_complaint && <p className="mt-0.5 text-xs text-[#3c4a43]">{s.chief_complaint}</p>}
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="text-[10px] uppercase tracking-wide text-[#a8b5ad]" style={{ fontFamily: "var(--font-mono)" }}>{s.status}</span>
+                              {s.duration_seconds && (
+                                <><span className="text-[#d3e5d9]">·</span><span className="text-[10px] text-[#a8b5ad]">{formatDuration(s.duration_seconds)}</span></>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {s.final_tier ? (
+                            <span className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${TIER_STYLES[s.final_tier] ?? ""}`}>
+                              <span className={`h-1.5 w-1.5 rounded-full ${TIER_DOT[s.final_tier] ?? ""}`} />
+                              {TIER_LABELS[s.final_tier] ?? s.final_tier}
+                            </span>
+                          ) : (
+                            <span className="rounded-full border border-[#e8e5dc] px-2.5 py-1 text-[10px] text-[#a8b5ad]">In progress</span>
+                          )}
+                          <ChevronRight className="h-4 w-4 text-[#c5d9ca] transition-transform group-hover:translate-x-0.5 group-hover:text-[#1e6a47]" />
+                        </div>
                       </div>
-                      {s.final_tier ? (
-                        <span className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${TIER_STYLES[s.final_tier] ?? ""}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${TIER_DOT[s.final_tier] ?? ""}`} />
-                          {TIER_LABELS[s.final_tier] ?? s.final_tier}
-                        </span>
-                      ) : (
-                        <span className="shrink-0 rounded-full border border-[#e8e5dc] px-2.5 py-1 text-[10px] text-[#a8b5ad]">In progress</span>
-                      )}
-                    </div>
+                    </Link>
                   </li>
                 ))}
               </ul>
