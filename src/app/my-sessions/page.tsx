@@ -2,9 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ArrowRight, Clock, LogIn, LogOut, UserPlus, ChevronRight, Bell, Stethoscope } from "lucide-react";
+import {
+  ArrowRight, Clock, LogIn, LogOut, UserPlus, ChevronRight,
+  Bell, Stethoscope, Plus, Trash2, BellRing,
+} from "lucide-react";
 import { usePatientProfile } from "@/hooks/usePatientProfile";
-import MedicationReminders from "@/components/patient/MedicationReminders";
+import { useReminders } from "@/hooks/useReminders";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 
 interface Session {
@@ -23,28 +26,21 @@ const TIER_STYLES: Record<string, string> = {
   er: "bg-red-100 text-red-800 border-red-200",
 };
 const TIER_LABELS: Record<string, string> = {
-  home: "Home Care",
-  clinic: "Clinic Visit",
-  er: "Emergency",
+  home: "Home Care", clinic: "Clinic Visit", er: "Emergency",
 };
 const TIER_DOT: Record<string, string> = {
-  home: "bg-green-500",
-  clinic: "bg-amber-500",
-  er: "bg-red-500",
+  home: "bg-green-500", clinic: "bg-amber-500", er: "bg-red-500",
 };
 
 function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-IN", {
-    day: "numeric", month: "short", year: "numeric",
-  });
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 function formatDuration(secs: number | null) {
   if (!secs) return null;
-  const m = Math.floor(secs / 60);
-  const s = secs % 60;
+  const m = Math.floor(secs / 60), s = secs % 60;
   return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
@@ -55,10 +51,19 @@ export default function MySessionsPage() {
     signIn, signUp, signOut,
   } = usePatientProfile();
 
+  const { reminders, dueNow, addReminder, deleteReminder, dismissDue } = useReminders(isAuthenticated ? userId : null);
+
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
   const [submitting, setSubmitting] = useState(false);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+
+  // Reminder form state
+  const [rName, setRName] = useState("");
+  const [rDose, setRDose] = useState("");
+  const [rTime1, setRTime1] = useState("08:00");
+  const [rTime2, setRTime2] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -82,6 +87,13 @@ export default function MySessionsPage() {
     setSubmitting(false);
   }
 
+  async function handleAddReminder() {
+    if (!rName.trim()) return;
+    await addReminder({ name: rName.trim(), dose: rDose.trim(), times: [rTime1, rTime2].filter(Boolean) });
+    setRName(""); setRDose(""); setRTime1("08:00"); setRTime2("");
+    setShowAddForm(false);
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#f4f1e9]">
@@ -92,9 +104,25 @@ export default function MySessionsPage() {
 
   return (
     <div className="min-h-screen bg-[#f4f1e9] text-[#14241c]">
-      {/* Top bar */}
+      {/* Due-now toasts */}
+      {dueNow.length > 0 && (
+        <div className="fixed bottom-6 right-4 z-50 flex flex-col gap-2">
+          {dueNow.map((r) => (
+            <div key={r.id} className="flex max-w-xs items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 shadow-lg">
+              <BellRing className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-900">Time to take your medication</p>
+                <p className="text-xs text-amber-700">{r.name}{r.dose ? ` — ${r.dose}` : ""}</p>
+              </div>
+              <button onClick={() => dismissDue(r)} className="text-amber-400 hover:text-amber-600 text-lg leading-none">×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Header */}
       <header className="sticky top-0 z-10 border-b border-[#d7e8dc] bg-[#f4f1e9]/90 backdrop-blur">
-        <div className="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+        <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
           <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[#14241c]">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#14241c]">
               <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
@@ -103,147 +131,206 @@ export default function MySessionsPage() {
             </div>
             PreCare
           </Link>
-          <div className="flex items-center gap-3">
-            {isAuthenticated && <MedicationReminders userId={userId} />}
-            <Link
-              href="/triage"
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#1e6a47] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#185c3d]"
-            >
-              New triage
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
+          <Link
+            href="/triage"
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#1e6a47] px-4 py-1.5 text-xs font-medium text-white hover:bg-[#185c3d]"
+          >
+            New triage <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
       </header>
 
-      <main className="mx-auto max-w-2xl px-4 py-8">
-        <h1 className="font-display mb-1 text-2xl font-medium">My Sessions</h1>
-        <p className="mb-6 text-sm text-[#6f7a73]">Your triage history and medication reminders.</p>
+      <main className="mx-auto max-w-3xl px-4 py-8">
+        <h1 className="font-display mb-1 text-2xl font-medium">My Dashboard</h1>
+        <p className="mb-8 text-sm text-[#6f7a73]">Your triage history and medication reminders.</p>
 
-        {/* Auth gate */}
+        {/* ── Auth gate ───────────────────────────────────── */}
         {!isAuthenticated ? (
           <div className="rounded-xl border border-[#d3e5d9] bg-white p-6">
-            <p className="mb-4 text-sm font-medium text-[#14241c]">Sign in to view your sessions.</p>
-
-            {/* Mode toggle */}
+            <p className="mb-4 text-sm font-medium text-[#14241c]">Sign in to view your sessions and manage reminders.</p>
             <div className="mb-3 flex rounded-lg border border-[#d3e5d9] p-0.5">
               {(["signin", "signup"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setAuthMode(m)}
-                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition-colors ${
-                    authMode === m ? "bg-[#14241c] text-white" : "text-[#6f7a73] hover:text-[#14241c]"
-                  }`}
-                >
+                <button key={m} onClick={() => setAuthMode(m)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 rounded-md py-2 text-xs font-medium transition-colors ${authMode === m ? "bg-[#14241c] text-white" : "text-[#6f7a73] hover:text-[#14241c]"}`}>
                   {m === "signin" ? <LogIn className="h-3 w-3" /> : <UserPlus className="h-3 w-3" />}
                   {m === "signin" ? "Sign in" : "Create account"}
                 </button>
               ))}
             </div>
-
             <div className="space-y-2">
-              <input
-                type="email" placeholder="Email"
-                value={email} onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none"
-              />
-              <input
-                type="password" placeholder="Password (min. 6 characters)"
-                value={password} onChange={(e) => setPassword(e.target.value)}
+              <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none" />
+              <input type="password" placeholder="Password (min. 6 characters)" value={password} onChange={(e) => setPassword(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && void handleAuth()}
-                className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none"
-              />
+                className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none" />
               {authError && <p className="text-xs text-red-600">{authError}</p>}
-              <button
-                onClick={() => void handleAuth()}
-                disabled={submitting || !email || !password}
-                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#14241c] py-2 text-sm font-medium text-white disabled:opacity-50"
-              >
+              <button onClick={() => void handleAuth()} disabled={submitting || !email || !password}
+                className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#14241c] py-2 text-sm font-medium text-white disabled:opacity-50">
                 {submitting ? "Please wait…" : authMode === "signin" ? "Sign in" : "Create account"}
                 <ChevronRight className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>
         ) : (
-          <>
-            {/* Account info */}
-            <div className="mb-5 flex items-center justify-between rounded-xl border border-[#d3e5d9] bg-white px-4 py-3">
-              <div>
-                <p className="text-sm font-semibold text-[#14241c]">{userEmail}</p>
-                <p className="text-xs text-[#6f7a73]">Signed in</p>
-              </div>
-              <button
-                onClick={() => void signOut()}
-                className="flex items-center gap-1 text-xs text-[#a8b5ad] hover:text-red-500 transition-colors"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                Sign out
-              </button>
-            </div>
+          <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
 
-            {/* Sessions list */}
-            {sessionsLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#1e6a47] border-t-transparent" />
+            {/* ── LEFT: Sessions ──────────────────────────── */}
+            <div>
+              {/* Account row */}
+              <div className="mb-4 flex items-center justify-between rounded-xl border border-[#d3e5d9] bg-white px-4 py-3">
+                <div>
+                  <p className="text-sm font-semibold text-[#14241c]">{userEmail}</p>
+                  <p className="text-xs text-[#6f7a73]">Signed in</p>
+                </div>
+                <button onClick={() => void signOut()} className="flex items-center gap-1 text-xs text-[#a8b5ad] hover:text-red-500 transition-colors">
+                  <LogOut className="h-3.5 w-3.5" /> Sign out
+                </button>
               </div>
-            ) : sessions.length === 0 ? (
-              <div className="rounded-xl border border-[#d7e8dc] bg-white px-6 py-12 text-center">
-                <Stethoscope className="mx-auto mb-3 h-8 w-8 text-[#a8b5ad]" />
-                <p className="text-sm font-medium text-[#14241c]">No sessions yet</p>
-                <p className="mt-1 text-xs text-[#6f7a73]">Start a triage call to see your history here.</p>
-                <Link
-                  href="/triage"
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#1e6a47] px-4 py-2 text-xs font-medium text-white hover:bg-[#185c3d]"
-                >
-                  Start triage <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </div>
-            ) : (
-              <ul className="space-y-3">
-                {sessions.map((s) => (
-                  <li key={s.id} className="rounded-xl border border-[#e8e5dc] bg-white p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8b5ad]" />
-                        <div>
-                          <p className="text-sm font-medium text-[#14241c]">
-                            {formatDate(s.started_at)}{" "}
-                            <span className="font-normal text-[#6f7a73]">at {formatTime(s.started_at)}</span>
-                          </p>
-                          {s.chief_complaint && (
-                            <p className="mt-0.5 text-xs text-[#3c4a43]">{s.chief_complaint}</p>
-                          )}
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="text-[10px] text-[#a8b5ad] uppercase tracking-wide"
-                              style={{ fontFamily: "var(--font-mono)" }}>
-                              {s.status}
-                            </span>
-                            {s.duration_seconds && (
-                              <>
-                                <span className="text-[#d3e5d9]">·</span>
-                                <span className="text-[10px] text-[#a8b5ad]">{formatDuration(s.duration_seconds)}</span>
-                              </>
-                            )}
+
+              <h2 className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#6f7a73]">Triage Sessions</h2>
+
+              {sessionsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#1e6a47] border-t-transparent" />
+                </div>
+              ) : sessions.length === 0 ? (
+                <div className="rounded-xl border border-[#d7e8dc] bg-white px-6 py-12 text-center">
+                  <Stethoscope className="mx-auto mb-3 h-8 w-8 text-[#a8b5ad]" />
+                  <p className="text-sm font-medium text-[#14241c]">No sessions yet</p>
+                  <p className="mt-1 text-xs text-[#6f7a73]">Start a triage call to see your history here.</p>
+                  <Link href="/triage" className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-[#1e6a47] px-4 py-2 text-xs font-medium text-white hover:bg-[#185c3d]">
+                    Start triage <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <ul className="space-y-3">
+                  {sessions.map((s) => (
+                    <li key={s.id} className="rounded-xl border border-[#e8e5dc] bg-white p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-[#a8b5ad]" />
+                          <div>
+                            <p className="text-sm font-medium text-[#14241c]">
+                              {formatDate(s.started_at)}{" "}
+                              <span className="font-normal text-[#6f7a73]">at {formatTime(s.started_at)}</span>
+                            </p>
+                            {s.chief_complaint && <p className="mt-0.5 text-xs text-[#3c4a43]">{s.chief_complaint}</p>}
+                            <div className="mt-1 flex items-center gap-2">
+                              <span className="text-[10px] uppercase tracking-wide text-[#a8b5ad]" style={{ fontFamily: "var(--font-mono)" }}>{s.status}</span>
+                              {s.duration_seconds && (
+                                <><span className="text-[#d3e5d9]">·</span><span className="text-[10px] text-[#a8b5ad]">{formatDuration(s.duration_seconds)}</span></>
+                              )}
+                            </div>
                           </div>
                         </div>
+                        {s.final_tier ? (
+                          <span className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${TIER_STYLES[s.final_tier] ?? ""}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${TIER_DOT[s.final_tier] ?? ""}`} />
+                            {TIER_LABELS[s.final_tier] ?? s.final_tier}
+                          </span>
+                        ) : (
+                          <span className="shrink-0 rounded-full border border-[#e8e5dc] px-2.5 py-1 text-[10px] text-[#a8b5ad]">In progress</span>
+                        )}
                       </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-                      {s.final_tier ? (
-                        <span className={`shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold ${TIER_STYLES[s.final_tier] ?? ""}`}>
-                          <span className={`h-1.5 w-1.5 rounded-full ${TIER_DOT[s.final_tier] ?? ""}`} />
-                          {TIER_LABELS[s.final_tier] ?? s.final_tier}
-                        </span>
-                      ) : (
-                        <span className="shrink-0 rounded-full border border-[#e8e5dc] px-2.5 py-1 text-[10px] text-[#a8b5ad]">
-                          In progress
-                        </span>
-                      )}
+            {/* ── RIGHT: Medication Reminders ─────────────── */}
+            <div>
+              <div className="rounded-xl border border-[#e8d5a0] bg-[#fefbf0] p-5 shadow-sm">
+                {/* Section header */}
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100">
+                      <Bell className="h-4 w-4 text-amber-600" />
                     </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </>
+                    <div>
+                      <h2 className="text-sm font-semibold text-[#14241c]">Medication Reminders</h2>
+                      <p className="text-[10px] text-[#6f7a73]">Get notified when it's time</p>
+                    </div>
+                  </div>
+                  {dueNow.length > 0 && (
+                    <span className="flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                      <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                      {dueNow.length} due now
+                    </span>
+                  )}
+                </div>
+
+                {/* Reminders list */}
+                {reminders.length === 0 && !showAddForm ? (
+                  <div className="mb-4 rounded-lg border border-dashed border-amber-200 bg-white px-4 py-6 text-center">
+                    <Bell className="mx-auto mb-2 h-6 w-6 text-amber-300" />
+                    <p className="text-xs text-[#6f7a73]">No reminders set yet.</p>
+                    <p className="text-[11px] text-[#a8b5ad]">Add one to get notified when to take your medications.</p>
+                  </div>
+                ) : (
+                  <ul className="mb-4 divide-y divide-[#f0e8c8]">
+                    {reminders.map((r) => (
+                      <li key={r.id} className={`flex items-center justify-between py-2.5 ${dueNow.some((d) => d.id === r.id) ? "opacity-100" : ""}`}>
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            {dueNow.some((d) => d.id === r.id) && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                            )}
+                            <p className="text-sm font-medium text-[#14241c]">
+                              {r.name}
+                              {r.dose && <span className="ml-1 text-xs font-normal text-[#6f7a73]">— {r.dose}</span>}
+                            </p>
+                          </div>
+                          <p className="text-xs text-[#a8b5ad]">{r.times.join(" · ")}</p>
+                        </div>
+                        <button onClick={() => void deleteReminder(r.id)} className="ml-2 text-[#c9b8b5] hover:text-red-500 transition-colors">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {/* Add form */}
+                {showAddForm ? (
+                  <div className="space-y-2 rounded-lg border border-amber-200 bg-white p-3">
+                    <input placeholder="Medication name *" value={rName} onChange={(e) => setRName(e.target.value)}
+                      className="w-full rounded-lg border border-[#e8d5a0] px-3 py-2 text-sm text-[#14241c] placeholder-[#a8b5ad] focus:border-amber-400 focus:outline-none" />
+                    <input placeholder="Dose (e.g. 500mg)" value={rDose} onChange={(e) => setRDose(e.target.value)}
+                      className="w-full rounded-lg border border-[#e8d5a0] px-3 py-2 text-sm text-[#14241c] placeholder-[#a8b5ad] focus:border-amber-400 focus:outline-none" />
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="mb-1 text-[10px] text-[#6f7a73]">Time 1</p>
+                        <input type="time" value={rTime1} onChange={(e) => setRTime1(e.target.value)}
+                          className="w-full rounded-lg border border-[#e8d5a0] px-2 py-2 text-sm focus:border-amber-400 focus:outline-none" />
+                      </div>
+                      <div>
+                        <p className="mb-1 text-[10px] text-[#6f7a73]">Time 2 (opt.)</p>
+                        <input type="time" value={rTime2} onChange={(e) => setRTime2(e.target.value)}
+                          className="w-full rounded-lg border border-[#e8d5a0] px-2 py-2 text-sm focus:border-amber-400 focus:outline-none" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => void handleAddReminder()} disabled={!rName.trim()}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-amber-500 py-2 text-xs font-semibold text-white hover:bg-amber-600 disabled:opacity-40">
+                        <Plus className="h-3.5 w-3.5" /> Save reminder
+                      </button>
+                      <button onClick={() => setShowAddForm(false)}
+                        className="rounded-lg border border-[#e8d5a0] px-3 py-2 text-xs text-[#6f7a73] hover:border-amber-300">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setShowAddForm(true)}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-amber-300 bg-white py-2.5 text-xs font-semibold text-amber-700 transition-colors hover:bg-amber-50">
+                    <Plus className="h-3.5 w-3.5" /> Add medication reminder
+                  </button>
+                )}
+              </div>
+            </div>
+
+          </div>
         )}
       </main>
     </div>
