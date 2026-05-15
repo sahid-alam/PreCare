@@ -7,9 +7,14 @@ import {
   Mic,
   ShieldCheck,
 } from "lucide-react";
-import { HeroCard } from "@/components/landing/HeroCard";
+import dynamic from "next/dynamic";
 import { FadeIn } from "@/components/landing/FadeIn";
 import { PageLoader } from "@/components/landing/PageLoader";
+
+const HeroCard = dynamic(
+  () => import("@/components/landing/HeroCard").then((m) => m.HeroCard),
+  { ssr: false }
+);
 
 const tiers = [
   {
@@ -106,7 +111,7 @@ export default function LandingPage() {
           </div>
         </nav>
 
-        <div className="relative z-10 grid min-h-[560px] items-end gap-10 px-6 pb-12 pt-12 sm:px-14 sm:pb-16 sm:pt-20 lg:grid-cols-[1.05fr_1fr]">
+        <div className="relative z-10 grid min-h-[560px] items-end gap-10 px-6 pb-12 pt-4 sm:px-14 sm:pb-16 sm:pt-6 lg:grid-cols-[1.05fr_1fr]">
           <div>
             <div
               className="lp-fade-up mb-8 inline-flex items-center gap-2 rounded-full border border-[#14241c]/10 bg-white/75 px-3.5 py-2 text-sm font-medium text-[#3c4a43] backdrop-blur"
