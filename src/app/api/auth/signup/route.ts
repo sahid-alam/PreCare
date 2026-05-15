@@ -17,15 +17,23 @@ export async function POST(req: Request): Promise<Response> {
 
   const supabase = getServiceClient();
 
-  // Create user with email pre-confirmed — no confirmation email sent, no rate limit
+  // Step 1: Create user confirmed, no password — avoids bcrypt variant issues in some Supabase versions
   const { data, error } = await supabase.auth.admin.createUser({
     email,
-    password,
     email_confirm: true,
   });
 
   if (error) {
     return Response.json({ error: error.message }, { status: 400 });
+  }
+
+  // Step 2: Set password separately so it is hashed through the correct path
+  const { error: pwError } = await supabase.auth.admin.updateUserById(data.user.id, {
+    password,
+  });
+
+  if (pwError) {
+    return Response.json({ error: pwError.message }, { status: 400 });
   }
 
   return Response.json({ userId: data.user.id }, { status: 201 });

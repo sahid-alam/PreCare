@@ -237,16 +237,30 @@ async function handleToolCalls(
   const toolCallId = toolCall.id ?? "";
 
   let params: Record<string, unknown> = {};
-  const rawArgs = toolCall.function?.arguments;
+
+  // Vapi sends arguments in multiple formats depending on provider:
+  // - function.arguments as JSON string (standard OpenAI)
+  // - function.arguments as already-parsed object (Azure OpenAI, some Vapi versions)
+  // - top-level arguments object on the tool call itself
+  // - top-level parameters object
+  const rawArgs =
+    (toolCall as Record<string, unknown>)["function"] != null
+      ? (toolCall.function?.arguments as unknown)
+      : (toolCall as Record<string, unknown>)["arguments"];
+
   if (typeof rawArgs === "string" && rawArgs.trim()) {
     try {
       params = JSON.parse(rawArgs) as Record<string, unknown>;
     } catch {
       console.warn("[webhook:tool-calls] bad arguments JSON:", rawArgs.slice(0, 200));
     }
+  } else if (rawArgs && typeof rawArgs === "object" && !Array.isArray(rawArgs)) {
+    params = rawArgs as Record<string, unknown>;
   } else if (toolCall.parameters && typeof toolCall.parameters === "object") {
     params = toolCall.parameters;
   }
+
+  console.log(`[webhook:tool-calls] parsed params:`, JSON.stringify(params).slice(0, 300));
 
   console.log(`[webhook:tool-calls] name=${name} id=${toolCallId} sid=${sessionId ?? "null"}`);
 
