@@ -20,10 +20,10 @@ interface Props {
   onStart: (profile: PatientProfile, lang: AppLanguage) => void;
 }
 
-const LANG_OPTIONS: { value: AppLanguage; label: string; native: string }[] = [
+const LANG_OPTIONS: { value: AppLanguage; label: string; native: string; disabled?: boolean }[] = [
   { value: "en", label: "English", native: "English" },
   { value: "hi", label: "Hindi", native: "हिन्दी" },
-  { value: "kn", label: "Kannada", native: "ಕನ್ನಡ" },
+  { value: "kn", label: "Kannada", native: "ಕನ್ನಡ", disabled: true },
 ];
 
 const GENDER_OPTIONS = [
@@ -268,15 +268,20 @@ export default function PatientIntake({ onStart }: Props) {
             {LANG_OPTIONS.map((l) => (
               <button
                 key={l.value}
-                onClick={() => setLang(l.value)}
-                className={`flex-1 rounded-lg border px-3 py-2.5 text-center text-sm font-medium transition-colors ${
-                  lang === l.value
+                onClick={() => !l.disabled && setLang(l.value)}
+                disabled={l.disabled}
+                className={`relative flex-1 rounded-lg border px-3 py-2.5 text-center text-sm font-medium transition-colors ${
+                  l.disabled
+                    ? "cursor-not-allowed border-[#e8e5dc] bg-[#f4f1e9] text-[#a8b5ad]"
+                    : lang === l.value
                     ? "border-[#1e6a47] bg-[#1e6a47] text-white"
                     : "border-[#d3e5d9] bg-white text-[#14241c] hover:border-[#1e6a47]"
                 }`}
               >
                 <span className="block">{l.native}</span>
-                <span className="block text-[10px] font-normal opacity-70">{l.label}</span>
+                <span className="block text-[10px] font-normal opacity-70">
+                  {l.disabled ? "Coming soon" : l.label}
+                </span>
               </button>
             ))}
           </div>
