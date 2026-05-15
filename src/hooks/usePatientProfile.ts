@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase-client";
 import type { PatientProfile } from "@/lib/types";
 
+const LS_KEY = "precare_profile";
+
 const EMPTY_PROFILE: PatientProfile = {
   age: null,
   gender: null,
@@ -14,6 +16,14 @@ const EMPTY_PROFILE: PatientProfile = {
   bloodSugar: "",
 };
 
+function loadFromStorage(): PatientProfile {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) return { ...EMPTY_PROFILE, ...(JSON.parse(raw) as Partial<PatientProfile>) };
+  } catch { /* ignore */ }
+  return EMPTY_PROFILE;
+}
+
 export function usePatientProfile() {
   const [userId, setUserId] = useState<string | null>(null);
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
@@ -22,43 +32,49 @@ export function usePatientProfile() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Sign in anonymously on mount and load any saved profile
+  // On mount: check for existing Supabase session, else fall back to localStorage
   useEffect(() => {
     void (async () => {
       const supabase = getSupabaseBrowserClient();
-      let { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
-      if (!user) {
-        const { data } = await supabase.auth.signInAnonymously();
-        user = data.user;
+      if (user && !( user as { is_anonymous?: boolean }).is_anonymous) {
+        setUserId(user.id);
+        // Load profile from DB
+        const { data: row } = await supabase
+          .from("patient_profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
+
+        if (row) {
+          const p: PatientProfile = {
+            age: row.age ?? null,
+            gender: (row.gender as PatientProfile["gender"]) ?? null,
+            knownConditions: row.known_conditions ?? [],
+            currentMedications: row.current_medications ?? "",
+            knownAllergies: row.known_allergies ?? "",
+            lastBp: row.last_bp ?? "",
+            bloodSugar: row.blood_sugar ?? "",
+          };
+          setProfile(p);
+          // Keep localStorage in sync
+          localStorage.setItem(LS_KEY, JSON.stringify(p));
+        } else {
+          setProfile(loadFromStorage());
+        }
+      } else {
+        // Guest: load from localStorage only
+        setProfile(loadFromStorage());
       }
 
-      if (!user) { setLoading(false); return; }
-      setUserId(user.id);
-
-      // Load saved profile from DB
-      const { data: row } = await supabase
-        .from("patient_profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      if (row) {
-        setProfile({
-          age: row.age ?? null,
-          gender: (row.gender as PatientProfile["gender"]) ?? null,
-          knownConditions: row.known_conditions ?? [],
-          currentMedications: row.current_medications ?? "",
-          knownAllergies: row.known_allergies ?? "",
-          lastBp: row.last_bp ?? "",
-          bloodSugar: row.blood_sugar ?? "",
-        });
-      }
       setLoading(false);
     })();
   }, []);
 
+  // Always persist profile to localStorage immediately so it survives refreshes
   const saveProfile = useCallback(async (p: PatientProfile) => {
+    localStorage.setItem(LS_KEY, JSON.stringify(p));
     if (!userId) return;
     const supabase = getSupabaseBrowserClient();
     await supabase.from("patient_profiles").upsert({
@@ -78,7 +94,7 @@ export function usePatientProfile() {
     setAuthError(null);
     const supabase = getSupabaseBrowserClient();
 
-    // Try sign in first; if user doesn't exist, sign up
+    // Try sign in first
     const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
       email: emailAddr,
       password: pwd,
@@ -86,6 +102,19 @@ export function usePatientProfile() {
 
     if (!signInErr && signInData.user) {
       setUserId(signInData.user.id);
+      // Migrate any localStorage profile to DB
+      const local = loadFromStorage();
+      await supabase.from("patient_profiles").upsert({
+        id: signInData.user.id,
+        age: local.age,
+        gender: local.gender,
+        known_conditions: local.knownConditions,
+        current_medications: local.currentMedications || null,
+        known_allergies: local.knownAllergies || null,
+        last_bp: local.lastBp || null,
+        blood_sugar: local.bloodSugar || null,
+        updated_at: new Date().toISOString(),
+      });
       return true;
     }
 
@@ -99,7 +128,22 @@ export function usePatientProfile() {
       setAuthError(signUpErr.message);
       return false;
     }
-    if (signUpData.user) setUserId(signUpData.user.id);
+
+    if (signUpData.user) {
+      setUserId(signUpData.user.id);
+      const local = loadFromStorage();
+      await supabase.from("patient_profiles").upsert({
+        id: signUpData.user.id,
+        age: local.age,
+        gender: local.gender,
+        known_conditions: local.knownConditions,
+        current_medications: local.currentMedications || null,
+        known_allergies: local.knownAllergies || null,
+        last_bp: local.lastBp || null,
+        blood_sugar: local.bloodSugar || null,
+        updated_at: new Date().toISOString(),
+      });
+    }
     return true;
   }, []);
 
