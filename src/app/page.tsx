@@ -3,12 +3,13 @@ import {
   Activity,
   ArrowRight,
   CheckCircle2,
-  Headphones,
   LockKeyhole,
   Mic,
   ShieldCheck,
-  Stethoscope,
 } from "lucide-react";
+import { HeroCard } from "@/components/landing/HeroCard";
+import { FadeIn } from "@/components/landing/FadeIn";
+import { PageLoader } from "@/components/landing/PageLoader";
 
 const tiers = [
   {
@@ -63,6 +64,8 @@ const steps = [
 
 export default function LandingPage() {
   return (
+    <>
+    <PageLoader />
     <main className="bg-[#ece9e1] p-2 text-[#14241c] sm:p-3.5">
       <section className="relative mx-auto max-w-[1440px] overflow-hidden rounded-[28px] border border-[#14241c]/10 bg-[#fcfbf7] shadow-[0_30px_60px_-30px_rgba(20,36,28,0.18)]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_70%_at_18%_60%,rgba(155,201,172,0.55)_0%,rgba(155,201,172,0.32)_28%,rgba(155,201,172,0.1)_55%,rgba(155,201,172,0)_75%),radial-gradient(40%_50%_at_38%_90%,rgba(47,139,94,0.18)_0%,rgba(47,139,94,0)_60%)]" />
@@ -105,22 +108,37 @@ export default function LandingPage() {
 
         <div className="relative z-10 grid min-h-[560px] items-end gap-10 px-6 pb-12 pt-12 sm:px-14 sm:pb-16 sm:pt-20 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <span className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#14241c]/10 bg-white/75 px-3.5 py-2 text-sm font-medium text-[#3c4a43] backdrop-blur">
-              <span className="h-2 w-2 rounded-full bg-[#2f8b5e] shadow-[0_0_0_4px_rgba(47,139,94,0.18)]" />
+            <div
+              className="lp-fade-up mb-8 inline-flex items-center gap-2 rounded-full border border-[#14241c]/10 bg-white/75 px-3.5 py-2 text-sm font-medium text-[#3c4a43] backdrop-blur"
+              style={{ animationDelay: "0.05s" }}
+            >
+              <span
+                className="h-2 w-2 rounded-full bg-[#2f8b5e]"
+                style={{ animation: "lp-live-ring 1.4s ease-out infinite" }}
+              />
               Asha v1 · Voice triage live
-            </span>
+            </div>
 
-            <h1 className="font-display max-w-4xl text-[42px] font-semibold leading-none text-[#14241c] sm:text-[64px] lg:text-[78px]">
+            <h1
+              className="lp-fade-up font-display max-w-4xl text-[42px] font-semibold leading-none text-[#14241c] sm:text-[64px] lg:text-[78px]"
+              style={{ animationDelay: "0.15s" }}
+            >
               Describe your symptoms. Get instant{" "}
               <em className="font-serif-display font-normal italic text-[#1e6a47]">triage</em>{" "}
               guidance.
             </h1>
 
-            <p className="mt-6 max-w-xl text-[17px] leading-7 text-[#3c4a43]">
+            <p
+              className="lp-fade-up mt-6 max-w-xl text-[17px] leading-7 text-[#3c4a43]"
+              style={{ animationDelay: "0.28s" }}
+            >
               Asha interviews you by voice, checks symptoms against emergency red flags, and tells you whether to rest at home, see a doctor, or go to the ER.
             </p>
 
-            <div className="mt-9 flex flex-wrap items-center gap-3">
+            <div
+              className="lp-fade-up mt-9 flex flex-wrap items-center gap-3"
+              style={{ animationDelay: "0.38s" }}
+            >
               <Link
                 href="/triage"
                 className="inline-flex items-center gap-3 rounded-full bg-[#1e6a47] px-6 py-4 text-[15px] font-medium text-white shadow-[0_10px_24px_-8px_rgba(30,106,71,0.6)] transition-colors hover:bg-[#0f3a26]"
@@ -138,7 +156,10 @@ export default function LandingPage() {
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-[#6f7a73]">
+            <div
+              className="lp-fade-up mt-4 flex flex-wrap items-center gap-2 text-sm text-[#6f7a73]"
+              style={{ animationDelay: "0.48s" }}
+            >
               <span>No account needed</span>
               <span className="h-1 w-1 rounded-full bg-[#6f7a73]" />
               <span>Anonymous</span>
@@ -147,62 +168,11 @@ export default function LandingPage() {
             </div>
           </div>
 
-          <div className="hidden justify-self-end lg:block">
-            <div className="w-[420px] rounded-[20px] border border-[#14241c]/10 bg-white/70 p-4.5 shadow-[0_40px_80px_-30px_rgba(20,36,28,0.22)] backdrop-blur">
-              <div className="mb-4 flex items-center justify-between text-xs text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)" }}>
-                <span>SESSION · 04:21</span>
-                <span className="inline-flex items-center gap-1.5 text-[#1e6a47]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#2f8b5e]" />
-                  LIVE
-                </span>
-              </div>
-
-              <div className="font-display text-lg leading-snug">
-                <span className="mb-1 block text-[11px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
-                  You said
-                </span>
-                "I've had chest pressure for the last hour, and I feel dizzy."
-              </div>
-
-              <div className="my-4 flex h-7 items-center gap-[3px]">
-                {[8, 18, 12, 22, 10, 16, 7, 20, 13, 18, 9, 22, 12, 16, 8, 19, 11, 15].map((height, index) => (
-                  <span
-                    key={`${height}-${index}`}
-                    className="w-[3px] rounded-full bg-[#2f8b5e]"
-                    style={{ height }}
-                  />
-                ))}
-              </div>
-
-              <div className="mb-2 flex justify-between text-[11px] uppercase text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.08em" }}>
-                <span>Recommendation</span>
-                <span>Safety checked</span>
-              </div>
-
-              <div className="grid gap-2">
-                {tiers.map((tier) => (
-                  <div
-                    key={tier.label}
-                    className={`flex items-center gap-3 rounded-xl border bg-white p-3 text-sm ${
-                      tier.tone === "red" ? "shadow-[0_0_0_3px_rgba(200,71,59,0.08)]" : ""
-                    }`}
-                    style={{
-                      borderColor: tier.tone === "red" ? "rgba(200,71,59,0.4)" : "#e8e5dc",
-                      background: tier.tone === "red" ? "#fbe5e1" : "#ffffff",
-                    }}
-                  >
-                    <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: tier.color }} />
-                    <div>
-                      <div className="font-medium text-[#14241c]">{tier.label}</div>
-                      <div className="text-xs text-[#6f7a73]">{tier.description}</div>
-                    </div>
-                    <span className="ml-auto text-[11px] text-[#1e6a47]" style={{ fontFamily: "var(--font-mono)" }}>
-                      {tier.tone === "red" ? "Call 108" : "-"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <div
+            className="lp-slide-right hidden justify-self-end lg:block"
+            style={{ animationDelay: "0.3s" }}
+          >
+            <HeroCard />
           </div>
         </div>
       </section>
@@ -225,19 +195,18 @@ export default function LandingPage() {
           {steps.map((step, index) => {
             const Icon = step.icon;
             return (
-              <article
-                key={step.title}
-                className="min-h-[280px] rounded-[18px] border border-[#e8e5dc] bg-[#faf8f1] p-7"
-              >
-                <div className="mb-7 text-xs text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
-                  STEP / {String(index + 1).padStart(2, "0")}
-                </div>
-                <div className="mb-5 grid h-11 w-11 place-items-center rounded-xl border border-[#dad6cb] bg-white text-[#1e6a47]">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <h3 className="font-display mb-2 text-[22px] font-medium">{step.title}</h3>
-                <p className="text-[14.5px] leading-6 text-[#3c4a43]">{step.copy}</p>
-              </article>
+              <FadeIn key={step.title} delay={index * 0.1}>
+                <article className="min-h-[280px] rounded-[18px] border border-[#e8e5dc] bg-[#faf8f1] p-7">
+                  <div className="mb-7 text-xs text-[#6f7a73]" style={{ fontFamily: "var(--font-mono)", letterSpacing: "0.1em" }}>
+                    STEP / {String(index + 1).padStart(2, "0")}
+                  </div>
+                  <div className="mb-5 grid h-11 w-11 place-items-center rounded-xl border border-[#dad6cb] bg-white text-[#1e6a47]">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display mb-2 text-[22px] font-medium">{step.title}</h3>
+                  <p className="text-[14.5px] leading-6 text-[#3c4a43]">{step.copy}</p>
+                </article>
+              </FadeIn>
             );
           })}
         </div>
@@ -258,9 +227,9 @@ export default function LandingPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-3">
-          {tiers.map((tier) => (
+          {tiers.map((tier, i) => (
+            <FadeIn key={tier.label} delay={i * 0.12}>
             <article
-              key={tier.label}
               className="relative min-h-[320px] overflow-hidden rounded-[20px] border bg-white p-7"
               style={{ borderColor: tier.border }}
             >
@@ -289,6 +258,7 @@ export default function LandingPage() {
                 ))}
               </ul>
             </article>
+            </FadeIn>
           ))}
         </div>
       </section>
@@ -343,5 +313,6 @@ export default function LandingPage() {
         </div>
       </footer>
     </main>
+    </>
   );
 }
