@@ -19,7 +19,8 @@ export function usePatientProfile() {
   const [profile, setProfile] = useState<PatientProfile>(EMPTY_PROFILE);
   const [loading, setLoading] = useState(true);
   const [email, setEmail] = useState("");
-  const [emailSent, setEmailSent] = useState(false);
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Sign in anonymously on mount and load any saved profile
   useEffect(() => {
@@ -73,14 +74,33 @@ export function usePatientProfile() {
     });
   }, [userId]);
 
-  const sendMagicLink = useCallback(async (emailAddr: string) => {
+  const signUpOrIn = useCallback(async (emailAddr: string, pwd: string): Promise<boolean> => {
+    setAuthError(null);
     const supabase = getSupabaseBrowserClient();
-    const { error } = await supabase.auth.signInWithOtp({
+
+    // Try sign in first; if user doesn't exist, sign up
+    const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
       email: emailAddr,
-      options: { shouldCreateUser: true },
+      password: pwd,
     });
-    if (!error) setEmailSent(true);
-    return !error;
+
+    if (!signInErr && signInData.user) {
+      setUserId(signInData.user.id);
+      return true;
+    }
+
+    // Sign up
+    const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
+      email: emailAddr,
+      password: pwd,
+    });
+
+    if (signUpErr) {
+      setAuthError(signUpErr.message);
+      return false;
+    }
+    if (signUpData.user) setUserId(signUpData.user.id);
+    return true;
   }, []);
 
   return {
@@ -91,7 +111,9 @@ export function usePatientProfile() {
     saveProfile,
     email,
     setEmail,
-    emailSent,
-    sendMagicLink,
+    password,
+    setPassword,
+    authError,
+    signUpOrIn,
   };
 }

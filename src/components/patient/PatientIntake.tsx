@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Mail, CheckCircle2 } from "lucide-react";
+import { ArrowRight, LogIn } from "lucide-react";
 import type { PatientProfile, AppLanguage } from "@/lib/types";
 import { KNOWN_CONDITIONS } from "@/lib/types";
 import { usePatientProfile } from "@/hooks/usePatientProfile";
@@ -24,22 +24,24 @@ const GENDER_OPTIONS = [
 ];
 
 export default function PatientIntake({ onStart }: Props) {
-  const { profile, setProfile, loading, saveProfile, email, setEmail, emailSent, sendMagicLink } =
+  const { profile, setProfile, loading, saveProfile, email, setEmail, password, setPassword, authError, signUpOrIn } =
     usePatientProfile();
   const [lang, setLang] = useState<AppLanguage>("en");
   const [showEmailForm, setShowEmailForm] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   async function handleStart() {
     await saveProfile(profile);
     onStart(profile, lang);
   }
 
-  async function handleSendLink() {
-    if (!email) return;
-    setSending(true);
-    await sendMagicLink(email);
-    setSending(false);
+  async function handleSaveAccount() {
+    if (!email || !password) return;
+    setSaving(true);
+    const ok = await signUpOrIn(email, password);
+    setSaving(false);
+    if (ok) setSaved(true);
   }
 
   function toggleCondition(c: string) {
@@ -241,12 +243,12 @@ export default function PatientIntake({ onStart }: Props) {
           </div>
         </div>
 
-        {/* Save with email */}
+        {/* Save with email + password */}
         <div className="mb-6 rounded-xl border border-[#d3e5d9] bg-white p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="text-sm font-medium text-[#14241c]">Save your profile</p>
-              <p className="text-xs text-[#6f7a73]">Get a magic link to access your history from any device.</p>
+              <p className="text-xs text-[#6f7a73]">Create an account to access your history from any device.</p>
             </div>
             <button
               onClick={() => setShowEmailForm((v) => !v)}
@@ -256,30 +258,35 @@ export default function PatientIntake({ onStart }: Props) {
             </button>
           </div>
           {showEmailForm && (
-            <div className="mt-3">
-              {emailSent ? (
-                <div className="flex items-center gap-2 text-sm text-[#1e6a47]">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Magic link sent — check your email!
-                </div>
+            <div className="mt-3 space-y-2">
+              {saved ? (
+                <p className="text-sm font-medium text-[#1e6a47]">Account saved — your profile is linked.</p>
               ) : (
-                <div className="flex gap-2">
+                <>
                   <input
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="flex-1 rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm text-[#14241c] placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none"
+                    className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm text-[#14241c] placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none"
                   />
+                  <input
+                    type="password"
+                    placeholder="Password (min. 6 characters)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-lg border border-[#d3e5d9] px-3 py-2 text-sm text-[#14241c] placeholder-[#a8b5ad] focus:border-[#1e6a47] focus:outline-none"
+                  />
+                  {authError && <p className="text-xs text-red-600">{authError}</p>}
                   <button
-                    onClick={() => void handleSendLink()}
-                    disabled={sending || !email}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#14241c] px-3 py-2 text-xs font-medium text-white disabled:opacity-50"
+                    onClick={() => void handleSaveAccount()}
+                    disabled={saving || !email || !password}
+                    className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#14241c] py-2 text-sm font-medium text-white disabled:opacity-50"
                   >
-                    <Mail className="h-3.5 w-3.5" />
-                    {sending ? "Sending…" : "Send"}
+                    <LogIn className="h-3.5 w-3.5" />
+                    {saving ? "Saving…" : "Sign up / Sign in"}
                   </button>
-                </div>
+                </>
               )}
             </div>
           )}
