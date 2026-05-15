@@ -1,0 +1,8 @@
+{
+  "$schema": "https://json-schema.org/claude-code-settings.json",
+  "_comment": "This file is gitignored. Use for personal overrides only — API keys, experimental settings, additional permission grants you don't want to commit to the team config. Copy this to .claude/settings.local.json and edit.",
+  "permissions": {
+    "allow": [],
+    "deny": []
+  }
+}
