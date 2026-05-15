@@ -3,46 +3,45 @@
 import { useEffect, useRef } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import type { TranscriptEntry } from "@/lib/types";
-import type { CallStatus } from "@/hooks/useVapiCall";
+import type { Transcript } from "@/lib/types";
 
 interface Props {
-  transcript: TranscriptEntry[];
-  status: CallStatus;
+  transcripts: Transcript[];
+  isActive: boolean;
 }
 
-export default function TranscriptPanel({ transcript, status }: Props) {
+export default function TranscriptFeed({ transcripts, isActive }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [transcript]);
+  }, [transcripts]);
 
   return (
-    <ScrollArea className="h-full min-h-[300px] rounded-lg border bg-muted/30">
+    <ScrollArea className="h-[400px] rounded-lg border bg-muted/20">
       <div className="flex flex-col gap-2 p-3">
-        {transcript.length === 0 && (
+        {transcripts.length === 0 && (
           <p className="text-sm text-muted-foreground text-center mt-10">
-            Your conversation will appear here
+            No transcript available yet
           </p>
         )}
-        {transcript.map((entry, i) => (
+        {transcripts.map((entry) => (
           <div
-            key={i}
+            key={entry.id}
             className={cn(
-              "max-w-[80%] rounded-lg px-3 py-2 text-sm",
+              "max-w-[85%] rounded-lg px-3 py-2 text-sm",
               entry.role === "user"
                 ? "self-end bg-blue-600 text-white"
                 : "self-start bg-white text-foreground border shadow-sm"
             )}
           >
             <p className="text-[10px] font-semibold mb-0.5 opacity-60 uppercase tracking-wide">
-              {entry.role === "user" ? "You" : "Asha"}
+              {entry.role === "user" ? "Patient" : "Asha"}
             </p>
-            {entry.text}
+            {entry.content}
           </div>
         ))}
-        {status === "active" && (
+        {isActive && (
           <div className="self-start bg-white border shadow-sm rounded-lg px-3 py-2 text-sm text-muted-foreground flex gap-1 items-center">
             <span className="animate-bounce inline-block">●</span>
             <span

@@ -109,3 +109,27 @@ export type VapiServerMessage =
   | VapiFunctionCallMessage
   | VapiStatusUpdateMessage
   | VapiEndOfCallReportMessage;
+
+// ── Patient UI types ──────────────────────────────────────────────────────────
+
+export type RiskLevel = "low" | "medium" | "high" | "er";
+
+export interface SymptomEntry {
+  name: string;
+  severity: string;
+  duration?: string;
+}
+
+export interface SubmitTriageAssessmentPayload {
+  tier: CareTier;
+  chief_complaint?: string;
+  reasoning?: string;
+  recommended_actions: string[];
+  red_flag_triggered?: boolean;
+}
+
+export interface TranscriptEntry {
+  role: "user" | "assistant";
+  text: string;
+  ts: number;
+}
