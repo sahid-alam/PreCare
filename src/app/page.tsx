@@ -88,7 +88,12 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-[#6f7a73] sm:inline">Healthcare staff?</span>
+            <Link
+              href="/my-sessions"
+              className="hidden rounded-full border border-[#14241c]/20 bg-white/50 px-4 py-2 text-sm font-medium backdrop-blur transition-colors hover:bg-white sm:inline-flex"
+            >
+              My Sessions
+            </Link>
             <Link
               href="/admin/login"
               className="rounded-full border border-[#14241c]/20 bg-white/50 px-4 py-2 text-sm font-medium backdrop-blur transition-colors hover:bg-white"
@@ -319,6 +324,7 @@ export default function LandingPage() {
           </h4>
           <ul className="grid gap-2 text-sm">
             <li><Link href="/triage" className="hover:text-white">Start triage</Link></li>
+            <li><Link href="/my-sessions" className="hover:text-white">My sessions</Link></li>
             <li><a href="#how" className="hover:text-white">How it works</a></li>
             <li><a href="#tiers" className="hover:text-white">Care tiers</a></li>
           </ul>

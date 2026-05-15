@@ -69,27 +69,37 @@ export function usePatientProfile() {
   const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
-    void (async () => {
-      const supabase = getSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
+    const supabase = getSupabaseBrowserClient();
 
-      if (user) {
-        setUserId(user.id);
-        setUserEmail(user.email ?? null);
-        setIsAuthenticated(true);
-        const dbProfile = await fetchDbProfile(user.id);
-        if (dbProfile) {
-          setProfile(dbProfile);
-          localStorage.setItem(LS_KEY, JSON.stringify(dbProfile));
+    // Initial load + keep all hook instances in sync when auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      void (async () => {
+        if (session?.user) {
+          setUserId(session.user.id);
+          setUserEmail(session.user.email ?? null);
+          setIsAuthenticated(true);
+
+          if (event === "INITIAL_SESSION" || event === "SIGNED_IN") {
+            const dbProfile = await fetchDbProfile(session.user.id);
+            if (dbProfile) {
+              setProfile(dbProfile);
+              localStorage.setItem(LS_KEY, JSON.stringify(dbProfile));
+            } else if (event === "INITIAL_SESSION") {
+              setProfile(loadFromStorage());
+            }
+          }
         } else {
-          setProfile(loadFromStorage());
+          setUserId(null);
+          setUserEmail(null);
+          setIsAuthenticated(false);
+          if (event === "INITIAL_SESSION") setProfile(loadFromStorage());
         }
-      } else {
-        setProfile(loadFromStorage());
-      }
 
-      setLoading(false);
-    })();
+        if (event === "INITIAL_SESSION") setLoading(false);
+      })();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const saveProfile = useCallback(async (p: PatientProfile) => {

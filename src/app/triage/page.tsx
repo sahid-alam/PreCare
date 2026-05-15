@@ -21,7 +21,7 @@ export default function PatientPage() {
   const [step, setStep] = useState<Step>("disclaimer");
   const [lang, setLang] = useState<AppLanguage>("en");
 
-  const { userId } = usePatientProfile();
+  const { userId, isAuthenticated } = usePatientProfile();
 
   const {
     status,
@@ -78,7 +78,7 @@ export default function PatientPage() {
             <span>Asha v1</span>
             <span>{lang === "en" ? "English" : lang === "hi" ? "Hindi" : "Kannada"}</span>
             <div className="ml-auto flex items-center gap-2">
-              <MedicationReminders userId={userId} />
+              {isAuthenticated && <MedicationReminders userId={userId} />}
               <Link href="/admin" className="text-[#bfc8c2] transition-colors hover:text-white text-sm">
                 Admin
               </Link>
