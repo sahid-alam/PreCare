@@ -79,6 +79,11 @@ export default function PatientPage() {
             <span>{lang === "en" ? "English" : lang === "hi" ? "Hindi" : "Kannada"}</span>
             <div className="ml-auto flex items-center gap-2">
               {isAuthenticated && <MedicationReminders userId={userId} />}
+              {isAuthenticated && (
+                <Link href="/my-sessions" className="text-[#bfc8c2] transition-colors hover:text-white text-sm">
+                  My Sessions
+                </Link>
+              )}
               <Link href="/admin" className="text-[#bfc8c2] transition-colors hover:text-white text-sm">
                 Admin
               </Link>

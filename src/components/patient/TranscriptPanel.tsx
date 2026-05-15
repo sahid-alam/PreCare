@@ -71,7 +71,7 @@ export default function TranscriptPanel({ transcript, status }: Props) {
               <div className="flex h-5 items-center gap-[3px]">
                 {[10, 16, 8, 14, 6].map((peak, index) => (
                   <span
-                    key={peak + index}
+                    key={index}
                     className="block w-[3px] rounded-full bg-[#2f8b5e]"
                     style={{
                       "--peak": `${peak}px`,

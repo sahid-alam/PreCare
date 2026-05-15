@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, LogIn, UserPlus, LogOut, Clock, ChevronRight } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, LogIn, UserPlus, LogOut, Clock, ChevronRight, History } from "lucide-react";
 import type { PatientProfile, AppLanguage } from "@/lib/types";
 import { KNOWN_CONDITIONS } from "@/lib/types";
 import { usePatientProfile } from "@/hooks/usePatientProfile";
@@ -132,6 +133,7 @@ export default function PatientIntake({ onStart }: Props) {
         {isAuthenticated ? (
           // Signed-in state
           <div className="mb-6 rounded-xl border border-[#d3e5d9] bg-white p-4">
+            {/* Account row */}
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-semibold text-[#14241c]">{userEmail}</p>
@@ -146,12 +148,26 @@ export default function PatientIntake({ onStart }: Props) {
               </button>
             </div>
 
-            {/* Past sessions */}
-            {pastSessions.length > 0 && (
-              <div className="mt-4 border-t border-[#f0ede4] pt-3">
-                <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-[#6f7a73]">
-                  Your past sessions
+            {/* Past sessions preview */}
+            <div className="mt-4 border-t border-[#f0ede4] pt-3">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-widest text-[#6f7a73]">
+                  Recent sessions
                 </p>
+                <Link
+                  href="/my-sessions"
+                  className="flex items-center gap-1 text-[11px] font-medium text-[#1e6a47] hover:underline"
+                >
+                  <History className="h-3 w-3" />
+                  View all
+                </Link>
+              </div>
+
+              {pastSessions.length === 0 ? (
+                <div className="flex flex-col items-center gap-2 rounded-lg bg-[#f4f1e9] px-4 py-5 text-center">
+                  <p className="text-xs text-[#6f7a73]">No sessions yet — fill in your profile below and start your first call.</p>
+                </div>
+              ) : (
                 <ul className="space-y-1.5">
                   {pastSessions.map((s) => (
                     <li key={s.id} className="flex items-center justify-between rounded-lg bg-[#f4f1e9] px-3 py-2">
@@ -170,8 +186,17 @@ export default function PatientIntake({ onStart }: Props) {
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
+              )}
+
+              {/* Prominent sessions link */}
+              <Link
+                href="/my-sessions"
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-[#d3e5d9] py-2 text-xs font-medium text-[#1e6a47] transition-colors hover:bg-[#edf4ee]"
+              >
+                <History className="h-3.5 w-3.5" />
+                Go to My Sessions
+              </Link>
+            </div>
           </div>
         ) : (
           // Guest state — sign in / sign up
