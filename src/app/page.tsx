@@ -7,14 +7,9 @@ import {
   Mic,
   ShieldCheck,
 } from "lucide-react";
-import dynamic from "next/dynamic";
+import { HeroCard } from "@/components/landing/HeroCardWrapper";
 import { FadeIn } from "@/components/landing/FadeIn";
 import { PageLoader } from "@/components/landing/PageLoader";
-
-const HeroCard = dynamic(
-  () => import("@/components/landing/HeroCard").then((m) => m.HeroCard),
-  { ssr: false }
-);
 
 const tiers = [
   {
