@@ -6,7 +6,7 @@ import type { CallStatus } from "@/hooks/useVapiCall";
 interface Props {
   status: CallStatus;
   isMuted: boolean;
-  lang: "en" | "hi";
+  lang: "en" | "hi" | "kn";
   onStart: () => void;
   onEnd: () => void;
   onToggleMute: () => void;

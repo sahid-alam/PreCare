@@ -2,6 +2,8 @@
 
 export type CareTier = "home" | "clinic" | "er";
 
+export type AppLanguage = "en" | "hi" | "kn";
+
 export type RedFlagCategory =
   | "cardiac"
   | "stroke"
@@ -132,4 +134,38 @@ export interface TranscriptEntry {
   role: "user" | "assistant";
   text: string;
   ts: number;
+}
+
+// ── Patient profile ───────────────────────────────────────────────────────────
+
+export const KNOWN_CONDITIONS = [
+  "Diabetes",
+  "Hypertension",
+  "Asthma",
+  "Heart disease",
+  "Kidney disease",
+  "Thyroid disorder",
+  "Arthritis",
+  "Cancer",
+  "Depression",
+  "Anxiety",
+  "Liver disease",
+] as const;
+
+export interface PatientProfile {
+  age: number | null;
+  gender: "male" | "female" | "other" | "prefer_not_to_say" | null;
+  knownConditions: string[];
+  currentMedications: string;
+  knownAllergies: string;
+  lastBp: string;
+  bloodSugar: string;
+}
+
+export interface MedicationReminder {
+  id: number;
+  name: string;
+  dose: string;
+  times: string[]; // ["08:00", "20:00"]
+  active: boolean;
 }

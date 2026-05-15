@@ -33,11 +33,13 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/admin/login";
 
-  if (!user && !isLoginPage) {
+  const isAnonymous = (user as { is_anonymous?: boolean } | null)?.is_anonymous === true;
+
+  if ((!user || isAnonymous) && !isLoginPage) {
     return NextResponse.redirect(new URL("/admin/login", request.url));
   }
 
-  if (user && isLoginPage) {
+  if (user && !isAnonymous && isLoginPage) {
     return NextResponse.redirect(new URL("/admin", request.url));
   }
 

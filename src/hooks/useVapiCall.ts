@@ -8,6 +8,8 @@ import type {
   SymptomEntry,
   SubmitTriageAssessmentPayload,
   TranscriptEntry,
+  PatientProfile,
+  AppLanguage,
 } from "@/lib/types";
 
 export type CallStatus = "idle" | "connecting" | "active" | "ended" | "error";
@@ -20,7 +22,7 @@ export interface VapiCallState {
   riskLevel: RiskLevel | null;
   classification: SubmitTriageAssessmentPayload | null;
   sessionId: string | null;
-  startCall: (lang: "en" | "hi") => Promise<void>;
+  startCall: (lang: AppLanguage, profile?: PatientProfile, patientId?: string | null) => Promise<void>;
   endCall: () => void;
   toggleMute: () => void;
   error: string | null;
@@ -44,7 +46,7 @@ export function useVapiCall(): VapiCallState {
     };
   }, []);
 
-  const startCall = useCallback(async (lang: "en" | "hi") => {
+  const startCall = useCallback(async (lang: AppLanguage, profile?: PatientProfile, patientId?: string | null) => {
     setStatus("connecting");
     setError(null);
     setTranscript([]);
@@ -57,7 +59,12 @@ export function useVapiCall(): VapiCallState {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: lang }),
+        body: JSON.stringify({
+          language: lang,
+          patient_id: patientId ?? undefined,
+          patient_age: profile?.age ?? undefined,
+          patient_gender: profile?.gender ?? undefined,
+        }),
       });
       const data = (await res.json()) as { sessionId?: string };
       if (!data.sessionId) throw new Error("No session ID returned");
@@ -190,7 +197,17 @@ export function useVapiCall(): VapiCallState {
 
     try {
       await vapi.start(process.env.NEXT_PUBLIC_VAPI_ASSISTANT_ID, {
-        variableValues: { sessionId: sid, language: lang },
+        variableValues: {
+          sessionId: sid,
+          language: lang,
+          age: String(profile?.age ?? ""),
+          gender: profile?.gender ?? "",
+          conditions: profile?.knownConditions.join(", ") || "none reported",
+          medications: profile?.currentMedications || "none reported",
+          allergies: profile?.knownAllergies || "none reported",
+          last_bp: profile?.lastBp || "not provided",
+          blood_sugar: profile?.bloodSugar || "not provided",
+        },
       });
     } catch (e) {
       setStatus("error");

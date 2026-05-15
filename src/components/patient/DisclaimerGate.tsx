@@ -1,32 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ArrowRight, Check, ShieldAlert } from "lucide-react";
 import { DISCLAIMER_TEXT } from "@/lib/constants";
 
 interface Props {
-  onAccept: (lang: "en" | "hi") => void;
+  onAccept: () => void;
 }
 
 export default function DisclaimerGate({ onAccept }: Props) {
   const [checked, setChecked] = useState(false);
-  const [lang, setLang] = useState<"en" | "hi">("en");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("asha_lang");
-    if (stored === "en" || stored === "hi") setLang(stored);
-  }, []);
-
-  function toggleLang() {
-    const next = lang === "en" ? "hi" : "en";
-    setLang(next);
-    localStorage.setItem("asha_lang", next);
-  }
 
   function handleContinue() {
     if (!checked) return;
-    localStorage.setItem("asha_lang", lang);
-    onAccept(lang);
+    onAccept();
   }
 
   return (
@@ -34,15 +21,8 @@ export default function DisclaimerGate({ onAccept }: Props) {
       <div className="relative w-full max-w-xl overflow-hidden rounded-[18px] bg-white p-8 shadow-[0_40px_80px_-20px_rgba(0,0,0,0.4)] sm:p-9">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_100%_0%,rgba(155,201,172,0.32)_0%,rgba(155,201,172,0)_70%)]" />
         <div className="relative">
-          <div className="mb-5 flex items-center justify-between gap-4">
+          <div className="mb-5">
             <span className="pc-eyebrow">Before we start</span>
-            <button
-              type="button"
-              onClick={toggleLang}
-              className="rounded-full border border-[#dad6cb] bg-white px-3 py-1.5 text-xs text-[#3c4a43] transition-colors hover:border-[#6f7a73]"
-            >
-              {lang === "en" ? "English / हिन्दी" : "हिन्दी / English"}
-            </button>
           </div>
 
           <h1 className="font-display mb-3 text-[30px] font-medium leading-tight">

@@ -5,6 +5,7 @@ interface CreateSessionBody {
   patient_age?: number;
   patient_gender?: string;
   language?: string;
+  patient_id?: string;
 }
 
 export async function POST(request: Request): Promise<Response> {
@@ -15,7 +16,8 @@ export async function POST(request: Request): Promise<Response> {
     // empty body is fine — all fields are optional
   }
 
-  const lang = body.language === "hi" ? "hi" : "en";
+  const VALID_LANGS = ["en", "hi", "kn"];
+  const lang = VALID_LANGS.includes(body.language ?? "") ? body.language! : "en";
   const age =
     typeof body.patient_age === "number" && body.patient_age > 0
       ? body.patient_age
@@ -30,6 +32,7 @@ export async function POST(request: Request): Promise<Response> {
     ...(age !== null && { patient_age: age }),
     ...(gender !== null && { patient_gender: gender }),
     ...(body.id ? { id: body.id } : {}),
+    ...(body.patient_id ? { patient_id: body.patient_id } : {}),
   };
 
   const { data, error } = await db
